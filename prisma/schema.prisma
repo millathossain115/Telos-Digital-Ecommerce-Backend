@@ -1,0 +1,95 @@
+// Prisma Schema for TelosCart E-Commerce Backend (https://www.teloscart.website/)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ==================== ENUMS ====================
+
+enum AdminRole {
+  SUPER_ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum AddressType {
+  SHIPPING
+  BILLING
+}
+
+// ==================== MODELS ====================
+
+// Admin model - back-office administrators for TelosCart
+model Admin {
+  id        String     @id @default(uuid())
+  name      String
+  email     String     @unique
+  password  String
+  role      AdminRole  @default(SUPER_ADMIN)
+  phone     String?
+  avatar    String?
+  status    UserStatus @default(ACTIVE)
+
+  // Soft Delete Policy
+  isDeleted Boolean    @default(false)
+  deletedAt DateTime?
+
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@map("admins")
+}
+
+// Customer model - shoppers and registered buyers for TelosCart
+model Customer {
+  id         String            @id @default(uuid())
+  customerId String?           @unique // Unique business identifier e.g. TC-2026-1001
+  name       String
+  email      String            @unique
+  password   String
+  phone      String?
+  avatar     String?
+  status     UserStatus        @default(ACTIVE)
+
+  // E-commerce address relations
+  addresses  CustomerAddress[]
+
+  // Soft Delete Policy
+  isDeleted  Boolean           @default(false)
+  deletedAt  DateTime?
+
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+
+  @@map("customers")
+}
+
+// CustomerAddress model - multi-address support for checkout & billing
+model CustomerAddress {
+  id         String      @id @default(uuid())
+  customerId String
+  customer   Customer    @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  title      String?     // e.g. "Home", "Office"
+  type       AddressType @default(SHIPPING)
+  isDefault  Boolean     @default(false)
+  street     String
+  city       String
+  state      String?
+  postalCode String?
+  country    String      @default("Bangladesh")
+
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  @@map("customer_addresses")
+}
