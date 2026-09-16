@@ -38,6 +38,7 @@ async function main() {
     update: {
       name: "Demo Customer",
       password: customerPasswordHash,
+      phone: "+8801700000000",
       status: "ACTIVE",
       isDeleted: false,
     },
@@ -51,7 +52,9 @@ async function main() {
       isDeleted: false,
     },
   });
-  console.log(`✅ Demo Customer seeded: ${customer.email} (${customer.customerId})`);
+  console.log(
+    `✅ Demo Customer seeded: ${customer.email} (${customer.customerId})`,
+  );
 
   // 3. Seed Default Address for Demo Customer
   const existingAddress = await prisma.customerAddress.findFirst({

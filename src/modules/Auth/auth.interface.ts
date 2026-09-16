@@ -1,14 +1,18 @@
 import { TRole } from "../../interface";
 
 export type TCustomerRegisterPayload = {
-  name: string;
+  name?: string;
+  fullName?: string;
   email: string;
   password: string;
-  phone?: string;
+  phone: string;
 };
 
 export type TLoginPayload = {
-  email: string;
+  email?: string;
+  phone?: string;
+  mobile?: string;
+  identifier?: string;
   password: string;
 };
 

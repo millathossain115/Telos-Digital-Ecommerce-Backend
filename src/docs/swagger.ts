@@ -27,7 +27,8 @@ export const swaggerDocument = {
     },
     {
       name: "Auth",
-      description: "Customer and Admin authentication, JWT tokens, and session lifecycle",
+      description:
+        "Customer and Admin authentication, JWT tokens, and session lifecycle",
     },
     {
       name: "Customers",
@@ -35,7 +36,8 @@ export const swaggerDocument = {
     },
     {
       name: "Admins",
-      description: "Back-office administrator accounts and dashboard operations",
+      description:
+        "Back-office administrator accounts and dashboard operations",
     },
   ],
   components: {
@@ -79,7 +81,11 @@ export const swaggerDocument = {
           id: { type: "string", format: "uuid" },
           customerId: { type: "string", example: "TC-2026-1001" },
           name: { type: "string", example: "Rahim Ahmed" },
-          email: { type: "string", format: "email", example: "customer@teloscart.website" },
+          email: {
+            type: "string",
+            format: "email",
+            example: "customer@teloscart.website",
+          },
           phone: { type: "string", example: "+8801700000000" },
           avatar: { type: "string", nullable: true },
           status: { $ref: "#/components/schemas/UserStatus" },
@@ -96,7 +102,11 @@ export const swaggerDocument = {
         properties: {
           id: { type: "string", format: "uuid" },
           name: { type: "string", example: "TelosCart Super Admin" },
-          email: { type: "string", format: "email", example: "admin@teloscart.website" },
+          email: {
+            type: "string",
+            format: "email",
+            example: "admin@teloscart.website",
+          },
           role: { type: "string", example: "SUPER_ADMIN" },
           phone: { type: "string", nullable: true },
           avatar: { type: "string", nullable: true },
@@ -131,23 +141,32 @@ export const swaggerDocument = {
         },
       },
     },
-    "/auth/customer/register": {
+    "/register": {
       post: {
         tags: ["Auth"],
         summary: "Customer Registration",
-        description: "Creates a new customer account with name, email, password, and optional phone.",
+        description:
+          "Creates a new customer account with full name, email, unique phone number, and password.",
         requestBody: {
           required: true,
           content: {
             "application/json": {
               schema: {
                 type: "object",
-                required: ["name", "email", "password"],
+                required: ["name", "email", "phone", "password"],
                 properties: {
                   name: { type: "string", example: "Rahim Ahmed" },
-                  email: { type: "string", format: "email", example: "customer@teloscart.website" },
-                  password: { type: "string", minLength: 6, example: "Customer123!" },
+                  email: {
+                    type: "string",
+                    format: "email",
+                    example: "customer@teloscart.website",
+                  },
                   phone: { type: "string", example: "+8801700000000" },
+                  password: {
+                    type: "string",
+                    minLength: 6,
+                    example: "Customer123!",
+                  },
                 },
               },
             },
@@ -155,15 +174,16 @@ export const swaggerDocument = {
         },
         responses: {
           201: { description: "Customer registered successfully" },
-          409: { description: "Email already exists" },
+          409: { description: "Email or phone already exists" },
         },
       },
     },
-    "/auth/login": {
+    "/login": {
       post: {
         tags: ["Auth"],
-        summary: "Unified Login",
-        description: "Authenticates either an Admin or Customer automatically.",
+        summary: "Customer Login",
+        description:
+          "Authenticates a customer by email or phone number. Admins must use /admin/login.",
         requestBody: {
           required: true,
           content: {
@@ -172,8 +192,12 @@ export const swaggerDocument = {
                 type: "object",
                 required: ["email", "password"],
                 properties: {
-                  email: { type: "string", format: "email", example: "admin@teloscart.website" },
-                  password: { type: "string", example: "SuperAdmin123!" },
+                  email: {
+                    type: "string",
+                    description: "Customer email or phone number",
+                    example: "customer@teloscart.website",
+                  },
+                  password: { type: "string", example: "Customer123!" },
                 },
               },
             },
@@ -182,6 +206,87 @@ export const swaggerDocument = {
         responses: {
           200: { description: "Login successful" },
           401: { description: "Invalid credentials" },
+        },
+      },
+    },
+    "/admin/login": {
+      post: {
+        tags: ["Auth"],
+        summary: "Admin Login",
+        description:
+          "Authenticates an admin from the admins table. There is no public admin registration route.",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["email", "password"],
+                properties: {
+                  email: {
+                    type: "string",
+                    format: "email",
+                    example: "admin@teloscart.website",
+                  },
+                  password: { type: "string", example: "SuperAdmin123!" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: "Admin login successful" },
+          401: { description: "Invalid credentials" },
+        },
+      },
+    },
+    "/auth/customer/register": {
+      post: {
+        tags: ["Auth"],
+        summary: "Customer Registration Alias",
+        description: "Backward-compatible alias for /register.",
+        responses: {
+          201: { description: "Customer registered successfully" },
+        },
+      },
+    },
+    "/auth/register": {
+      post: {
+        tags: ["Auth"],
+        summary: "Customer Registration Alias",
+        description: "Backward-compatible alias for /register.",
+        responses: {
+          201: { description: "Customer registered successfully" },
+        },
+      },
+    },
+    "/auth/customer/login": {
+      post: {
+        tags: ["Auth"],
+        summary: "Customer Login Alias",
+        description: "Backward-compatible alias for /login.",
+        responses: {
+          200: { description: "Customer login successful" },
+        },
+      },
+    },
+    "/auth/login": {
+      post: {
+        tags: ["Auth"],
+        summary: "Customer Login Alias",
+        description: "Backward-compatible alias for /login.",
+        responses: {
+          200: { description: "Customer login successful" },
+        },
+      },
+    },
+    "/auth/admin/login": {
+      post: {
+        tags: ["Auth"],
+        summary: "Admin Login Alias",
+        description: "Backward-compatible alias for /admin/login.",
+        responses: {
+          200: { description: "Admin login successful" },
         },
       },
     },
@@ -203,9 +308,21 @@ export const swaggerDocument = {
         security: [{ bearerAuth: [] }],
         parameters: [
           { name: "searchTerm", in: "query", schema: { type: "string" } },
-          { name: "status", in: "query", schema: { $ref: "#/components/schemas/UserStatus" } },
-          { name: "page", in: "query", schema: { type: "integer", default: 1 } },
-          { name: "limit", in: "query", schema: { type: "integer", default: 20 } },
+          {
+            name: "status",
+            in: "query",
+            schema: { $ref: "#/components/schemas/UserStatus" },
+          },
+          {
+            name: "page",
+            in: "query",
+            schema: { type: "integer", default: 1 },
+          },
+          {
+            name: "limit",
+            in: "query",
+            schema: { type: "integer", default: 20 },
+          },
         ],
         responses: {
           200: { description: "List of customers" },

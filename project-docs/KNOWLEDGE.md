@@ -280,7 +280,7 @@ Interactive API documentation is powered by **Swagger UI** (`swagger-ui-express`
    - Store managers are strictly represented in the `Admin` table (`admins`).
    - Never mix administrative staff into customer queries, marketing lists, or sales analytics.
 2. **Lean & Frictionless Customer Registration**:
-   - Initial registration must remain fast: only `name`, `email`, `password`, and optional `phone`.
+   - Initial registration must remain fast: only full name (`name` or `fullName`), `email`, required unique `phone`, and `password`.
    - Full shipping and billing addresses must **never** be forced during registration; they belong in the dedicated `CustomerAddress` model at checkout or in profile settings.
 3. **No Floating-Point Math for Money**:
    - Store all currency amounts (prices, discounts, taxes, shipping fees, totals) in PostgreSQL as `Decimal(12, 2)` or integer cents.
@@ -357,8 +357,11 @@ The platform utilizes dedicated separate tables for maximum security and domain 
 3. **Role Enforcement in `auth.ts`**:
    - If endpoint specifies `auth("SUPER_ADMIN")`: verified token role must equal `"SUPER_ADMIN"`.
    - If endpoint specifies `auth()`: allows either authenticated customer or admin.
-4. **Token Refresh Rotation**:
-   - Handles refresh tokens delivered via HTTP-only secure cookies or JSON body. Automatically detects whether the user is an Admin or Customer.
+4. **Public Login Separation**:
+   - Customer login is exposed at `/api/v1/login` and accepts email or phone plus password.
+   - Admin login is exposed at `/api/v1/admin/login` and authenticates only against the `admins` table. There is no public admin registration route.
+5. **Token Refresh Rotation**:
+   - Handles refresh tokens delivered via HTTP-only secure cookies or JSON body and validates the token role against its dedicated table.
 
 ### Default Seeded Credentials:
 - **Super Admin**: `admin@teloscart.website` / `SuperAdmin123!`

@@ -1,35 +1,51 @@
 import { z } from "zod";
 
 const customerRegisterValidationSchema = z.object({
-  body: z.object({
-    name: z.string({
-      required_error: "Full name is required",
+  body: z
+    .object({
+      name: z.string().optional(),
+      fullName: z.string().optional(),
+      email: z
+        .string({
+          required_error: "Email address is required",
+        })
+        .email("Invalid email address format"),
+      password: z
+        .string({
+          required_error: "Password is required",
+        })
+        .min(6, "Password must be at least 6 characters long"),
+      phone: z
+        .string({
+          required_error: "Phone number is required",
+        })
+        .trim()
+        .min(6, "Phone number must be at least 6 characters long"),
+    })
+    .refine((data) => data.name?.trim() || data.fullName?.trim(), {
+      message: "Full name is required",
+      path: ["name"],
     }),
-    email: z
-      .string({
-        required_error: "Email address is required",
-      })
-      .email("Invalid email address format"),
-    password: z
-      .string({
-        required_error: "Password is required",
-      })
-      .min(6, "Password must be at least 6 characters long"),
-    phone: z.string().optional(),
-  }),
 });
 
 const loginValidationSchema = z.object({
-  body: z.object({
-    email: z
-      .string({
-        required_error: "Email address is required",
-      })
-      .email("Invalid email address format"),
-    password: z.string({
-      required_error: "Password is required",
-    }),
-  }),
+  body: z
+    .object({
+      email: z.string().trim().optional(),
+      phone: z.string().trim().optional(),
+      mobile: z.string().trim().optional(),
+      identifier: z.string().trim().optional(),
+      password: z.string({
+        required_error: "Password is required",
+      }),
+    })
+    .refine(
+      (data) => data.email || data.phone || data.mobile || data.identifier,
+      {
+        message: "Email or phone number is required",
+        path: ["email"],
+      },
+    ),
 });
 
 const refreshTokenValidationSchema = z.object({

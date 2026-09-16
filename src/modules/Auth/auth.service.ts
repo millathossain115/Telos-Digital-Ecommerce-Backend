@@ -78,21 +78,41 @@ const generateTokens = (payload: {
   return { accessToken, refreshToken };
 };
 
+const getLoginIdentifier = (payload: TLoginPayload): string =>
+  (
+    payload.email ||
+    payload.phone ||
+    payload.mobile ||
+    payload.identifier ||
+    ""
+  ).trim();
+
 const registerCustomer = async (
   payload: TCustomerRegisterPayload,
 ): Promise<TAuthResponse> => {
   const normalizedEmail = payload.email.toLowerCase().trim();
+  const normalizedPhone = payload.phone.trim();
+  const name = (payload.name || payload.fullName || "").trim();
 
-  // Ensure unique email across customers and admins
-  const [existingCustomer, existingAdmin] = await Promise.all([
-    prisma.customer.findUnique({ where: { email: normalizedEmail } }),
-    prisma.admin.findUnique({ where: { email: normalizedEmail } }),
-  ]);
+  // Ensure unique email across customers and admins, and unique phone for customers.
+  const [existingCustomerByEmail, existingAdmin, existingCustomerByPhone] =
+    await Promise.all([
+      prisma.customer.findUnique({ where: { email: normalizedEmail } }),
+      prisma.admin.findUnique({ where: { email: normalizedEmail } }),
+      prisma.customer.findUnique({ where: { phone: normalizedPhone } }),
+    ]);
 
-  if (existingCustomer || existingAdmin) {
+  if (existingCustomerByEmail || existingAdmin) {
     throw new AppError(
       httpStatus.CONFLICT,
       "An account with this email address already exists",
+    );
+  }
+
+  if (existingCustomerByPhone) {
+    throw new AppError(
+      httpStatus.CONFLICT,
+      "An account with this phone number already exists",
     );
   }
 
@@ -108,10 +128,10 @@ const registerCustomer = async (
   const customer = await prisma.customer.create({
     data: {
       customerId,
-      name: payload.name.trim(),
+      name,
       email: normalizedEmail,
       password: hashedPassword,
-      phone: payload.phone?.trim() || null,
+      phone: normalizedPhone,
       status: "ACTIVE",
       isDeleted: false,
     },
@@ -147,14 +167,23 @@ const registerCustomer = async (
 const loginCustomer = async (
   payload: TLoginPayload,
 ): Promise<TAuthResponse> => {
-  const normalizedEmail = payload.email.toLowerCase().trim();
+  const identifier = getLoginIdentifier(payload);
+  const normalizedIdentifier = identifier.toLowerCase();
+  const isEmailLogin = identifier.includes("@");
 
-  const customer = await prisma.customer.findUnique({
-    where: { email: normalizedEmail },
-  });
+  const customer = isEmailLogin
+    ? await prisma.customer.findUnique({
+        where: { email: normalizedIdentifier },
+      })
+    : await prisma.customer.findUnique({
+        where: { phone: identifier },
+      });
 
   if (!customer || customer.isDeleted) {
-    throw new AppError(httpStatus.UNAUTHORIZED, "Invalid email or password");
+    throw new AppError(
+      httpStatus.UNAUTHORIZED,
+      "Invalid email/phone or password",
+    );
   }
 
   if (customer.status !== "ACTIVE") {
@@ -170,7 +199,10 @@ const loginCustomer = async (
   );
 
   if (!isPasswordMatched) {
-    throw new AppError(httpStatus.UNAUTHORIZED, "Invalid email or password");
+    throw new AppError(
+      httpStatus.UNAUTHORIZED,
+      "Invalid email/phone or password",
+    );
   }
 
   const { accessToken, refreshToken } = generateTokens({
@@ -198,7 +230,8 @@ const loginCustomer = async (
 };
 
 const loginAdmin = async (payload: TLoginPayload): Promise<TAuthResponse> => {
-  const normalizedEmail = payload.email.toLowerCase().trim();
+  const identifier = getLoginIdentifier(payload);
+  const normalizedEmail = identifier.toLowerCase();
 
   const admin = await prisma.admin.findUnique({
     where: { email: normalizedEmail },
@@ -247,29 +280,9 @@ const loginAdmin = async (payload: TLoginPayload): Promise<TAuthResponse> => {
   };
 };
 
-// Unified login for either Admin or Customer
+// Public site login is customer-only. Admins must use /admin/login.
 const login = async (payload: TLoginPayload): Promise<TAuthResponse> => {
-  const normalizedEmail = payload.email.toLowerCase().trim();
-
-  // Try admin first
-  const admin = await prisma.admin.findUnique({
-    where: { email: normalizedEmail },
-  });
-
-  if (admin && !admin.isDeleted) {
-    return loginAdmin(payload);
-  }
-
-  // Otherwise try customer
-  const customer = await prisma.customer.findUnique({
-    where: { email: normalizedEmail },
-  });
-
-  if (customer && !customer.isDeleted) {
-    return loginCustomer(payload);
-  }
-
-  throw new AppError(httpStatus.UNAUTHORIZED, "Invalid email or password");
+  return loginCustomer(payload);
 };
 
 const refreshToken = async (token: string): Promise<TRefreshTokenResponse> => {

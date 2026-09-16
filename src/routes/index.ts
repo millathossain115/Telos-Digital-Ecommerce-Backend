@@ -1,11 +1,32 @@
 import { Router } from "express";
+import validateRequest from "../middlewares/validateRequest";
 import { AdminRoutes } from "../modules/Admin/admin.route";
+import { AuthController } from "../modules/Auth/auth.controller";
 import { AuthRoutes } from "../modules/Auth/auth.route";
+import { AuthValidation } from "../modules/Auth/auth.validation";
 import { CustomerRoutes } from "../modules/Customer/customer.route";
 import { HealthRoutes } from "../modules/Health/health.route";
 import { UploadRoutes } from "../modules/Upload/upload.route";
 
 const router = Router();
+
+router.post(
+  "/register",
+  validateRequest(AuthValidation.customerRegisterValidationSchema),
+  AuthController.registerCustomer,
+);
+
+router.post(
+  "/login",
+  validateRequest(AuthValidation.loginValidationSchema),
+  AuthController.login,
+);
+
+router.post(
+  "/admin/login",
+  validateRequest(AuthValidation.loginValidationSchema),
+  AuthController.loginAdmin,
+);
 
 const moduleRoutes = [
   {

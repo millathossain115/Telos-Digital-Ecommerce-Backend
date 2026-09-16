@@ -34,7 +34,7 @@ router.post(
   AuthController.loginAdmin,
 );
 
-// Unified Login (Admin or Customer)
+// Customer Login Alias
 router.post(
   "/login",
   validateRequest(AuthValidation.loginValidationSchema),
