@@ -95,6 +95,7 @@ Telos Digital Ecommerce Backend/
 │   │   │   └── admin.route.ts
 │   │   │
 │   │   ├── Category/              # Main categories, separate sub_categories, slugs, icons, R2 imagery
+│   │   ├── Brand/                 # Official brands (flat, no children), taglines, marquee featuring, slugs, R2 imagery
 │   │   ├── Product/               # [Upcoming] Catalog items, SKU, variants, stock, pricing, image assets
 │   │   ├── Cart/                  # [Upcoming] Customer shopping cart & guest session cart
 │   │   ├── Order/                 # [Upcoming] Checkout, order status pipeline, invoice numbering

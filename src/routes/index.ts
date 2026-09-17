@@ -4,6 +4,7 @@ import { AdminRoutes } from "../modules/Admin/admin.route";
 import { AuthController } from "../modules/Auth/auth.controller";
 import { AuthRoutes } from "../modules/Auth/auth.route";
 import { AuthValidation } from "../modules/Auth/auth.validation";
+import { BrandRoutes } from "../modules/Brand/brand.route";
 import { CategoryRoutes } from "../modules/Category/category.route";
 import { CustomerRoutes } from "../modules/Customer/customer.route";
 import { HealthRoutes } from "../modules/Health/health.route";
@@ -53,6 +54,10 @@ const moduleRoutes = [
   {
     path: "/categories",
     route: CategoryRoutes,
+  },
+  {
+    path: "/brands",
+    route: BrandRoutes,
   },
 ];
 

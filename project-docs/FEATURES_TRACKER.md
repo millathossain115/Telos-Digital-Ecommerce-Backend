@@ -72,19 +72,30 @@
 - [x] **Public Category Tree API**: Hierarchical listing for header mega-menu
 - [x] **Admin Category CRUD**: Create, update, reorder, delete with R2 image upload
 
-### Module 6: Products & Variants (`/api/v1/products`)
+### Module 6: Brands Catalog (`/api/v1/brands`)
+
+- [x] **Brand Model**: flat `brands` table (no children/sub-brands) with `name`, backend-generated `slug`, `tagline`, `description`, `image`/`imageKey`, `isActive`, `isFeaturedMarquee`, soft delete
+- [x] **Admin Brand Listing**: `GET /api/v1/brands` (Super Admin with search, `isActive` / `isFeaturedMarquee` filters, pagination, sorting)
+- [x] **Create Brand**: `POST /api/v1/brands` (Super Admin, multipart with R2 logo upload, slug auto-generated)
+- [x] **Brand Details**: `GET /api/v1/brands/:id` (Super Admin)
+- [x] **Update Brand**: `PATCH /api/v1/brands/:id` (Super Admin, image replace/remove, slug regenerated on rename)
+- [x] **Soft Delete Brand**: `DELETE /api/v1/brands/:id` (Super Admin; also clears marquee featuring)
+- [x] **Public Official Brands Marquee API**: `GET /api/v1/brands/marquee` (active + featured brands for the storefront strip)
+- [x] **Public Brand By Slug API**: `GET /api/v1/brands/slug/:slug`
+
+### Module 7: Products & Variants (`/api/v1/products`)
 
 - [ ] **Product Model**: `name`, `slug`, `sku`, `price`, `discountPrice`, `stock`, `images`, `categoryId`
 - [ ] **Public Product Catalog**: Search, category filter, price range, brand, pagination
 - [ ] **Product Detail API**: Fetch by slug/ID with stock availability
 - [ ] **Admin Product Management**: Full CRUD with image upload support
 
-### Module 7: Shopping Cart (`/api/v1/cart`)
+### Module 8: Shopping Cart (`/api/v1/cart`)
 
 - [ ] **Cart & CartItem Models**: `customerId`, `productId`, `quantity`, `priceSnapshot`
 - [ ] **Cart Operations**: Add to cart, update quantity, remove item, clear cart
 
-### Module 8: Checkout & Orders (`/api/v1/orders`)
+### Module 9: Checkout & Orders (`/api/v1/orders`)
 
 - [ ] **Order & OrderItem Models**: `orderNumber` (e.g. `TC-ORD-2026-XXXX`), status, paymentStatus, total
 - [ ] **Checkout API**: Converts cart items into order, captures shipping address snapshot

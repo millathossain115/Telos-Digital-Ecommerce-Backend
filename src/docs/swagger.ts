@@ -44,6 +44,11 @@ export const swaggerDocument = {
       description:
         "Product category hierarchy, subcategories, homepage featuring, and R2 imagery",
     },
+    {
+      name: "Brands",
+      description:
+        "Official brand catalog with taglines, the storefront brands marquee, and R2 imagery",
+    },
   ],
   components: {
     securitySchemes: {
@@ -150,6 +155,26 @@ export const swaggerDocument = {
             type: "array",
             items: { type: "object" },
           },
+          createdAt: { type: "string", format: "date-time" },
+          updatedAt: { type: "string", format: "date-time" },
+        },
+      },
+      Brand: {
+        type: "object",
+        properties: {
+          id: { type: "string", format: "uuid" },
+          name: { type: "string", example: "Apple" },
+          slug: { type: "string", example: "apple" },
+          tagline: {
+            type: "string",
+            nullable: true,
+            example: "Think Different",
+          },
+          description: { type: "string", nullable: true },
+          image: { type: "string", nullable: true },
+          imageKey: { type: "string", nullable: true },
+          isActive: { type: "boolean", example: true },
+          isFeaturedMarquee: { type: "boolean", example: true },
           createdAt: { type: "string", format: "date-time" },
           updatedAt: { type: "string", format: "date-time" },
         },
@@ -603,6 +628,173 @@ export const swaggerDocument = {
         ],
         responses: {
           200: { description: "Subcategory deleted successfully" },
+        },
+      },
+    },
+    "/brands": {
+      get: {
+        tags: ["Brands"],
+        summary: "List brands for admin",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "searchTerm", in: "query", schema: { type: "string" } },
+          { name: "isActive", in: "query", schema: { type: "boolean" } },
+          {
+            name: "isFeaturedMarquee",
+            in: "query",
+            schema: { type: "boolean" },
+          },
+          { name: "page", in: "query", schema: { type: "integer" } },
+          { name: "limit", in: "query", schema: { type: "integer" } },
+          { name: "sortBy", in: "query", schema: { type: "string" } },
+          {
+            name: "sortOrder",
+            in: "query",
+            schema: { type: "string", enum: ["asc", "desc"] },
+          },
+        ],
+        responses: {
+          200: { description: "Brands retrieved successfully" },
+          403: { description: "Forbidden - Super Admin required" },
+        },
+      },
+      post: {
+        tags: ["Brands"],
+        summary: "Create brand",
+        description:
+          "Creates a brand with a backend-generated slug. Multipart form-data; the `image` field is uploaded to Cloudflare R2 under `brands/<slug>/`.",
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "multipart/form-data": {
+              schema: {
+                type: "object",
+                required: ["name"],
+                properties: {
+                  name: { type: "string", example: "Apple" },
+                  tagline: {
+                    type: "string",
+                    description: "Official tagline",
+                    example: "Think Different",
+                  },
+                  description: { type: "string" },
+                  isActive: { type: "boolean", default: true },
+                  isFeaturedMarquee: {
+                    type: "boolean",
+                    default: false,
+                    description:
+                      "Featured in Official Brands Marquee (requires an image)",
+                  },
+                  image: { type: "string", format: "binary" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          201: { description: "Brand created successfully" },
+          400: { description: "Validation error" },
+        },
+      },
+    },
+    "/brands/marquee": {
+      get: {
+        tags: ["Brands"],
+        summary: "Get active brands featured in the official brands marquee",
+        responses: {
+          200: { description: "Official brands marquee retrieved successfully" },
+        },
+      },
+    },
+    "/brands/slug/{slug}": {
+      get: {
+        tags: ["Brands"],
+        summary: "Get active brand by slug",
+        parameters: [
+          {
+            name: "slug",
+            in: "path",
+            required: true,
+            schema: { type: "string" },
+          },
+        ],
+        responses: {
+          200: { description: "Brand retrieved successfully" },
+          404: { description: "Brand not found" },
+        },
+      },
+    },
+    "/brands/{id}": {
+      get: {
+        tags: ["Brands"],
+        summary: "Get brand by id for admin",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "string" },
+          },
+        ],
+        responses: {
+          200: { description: "Brand retrieved successfully" },
+          404: { description: "Brand not found" },
+        },
+      },
+      patch: {
+        tags: ["Brands"],
+        summary: "Update brand",
+        description:
+          "Multipart form-data. Sending a new `image` replaces and deletes the previous R2 object; `removeImage=true` clears it. Renaming regenerates the slug.",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "string" },
+          },
+        ],
+        requestBody: {
+          content: {
+            "multipart/form-data": {
+              schema: {
+                type: "object",
+                properties: {
+                  name: { type: "string" },
+                  tagline: { type: "string" },
+                  description: { type: "string" },
+                  isActive: { type: "boolean" },
+                  isFeaturedMarquee: { type: "boolean" },
+                  removeImage: { type: "boolean" },
+                  image: { type: "string", format: "binary" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: "Brand updated successfully" },
+          404: { description: "Brand not found" },
+        },
+      },
+      delete: {
+        tags: ["Brands"],
+        summary: "Soft delete brand",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "string" },
+          },
+        ],
+        responses: {
+          200: { description: "Brand deleted successfully" },
+          404: { description: "Brand not found" },
         },
       },
     },

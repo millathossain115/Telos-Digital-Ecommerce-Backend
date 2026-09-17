@@ -119,6 +119,31 @@ model Category {
   @@map("categories")
 }
 
+// Brand model - manufacturer/vendor identities for storefront filtering and the
+// "Official Brands" marquee. Flat hierarchy on purpose: brands have no children.
+model Brand {
+  id                String   @id @default(uuid())
+  name              String
+  slug              String   @unique
+  tagline           String? // Official tagline supplied by the storefront form
+  description       String?
+  image             String?
+  imageKey          String?
+  isActive          Boolean  @default(true)
+  isFeaturedMarquee Boolean  @default(false) // Featured in Official Brands Marquee
+
+  // Soft Delete Policy
+  isDeleted         Boolean  @default(false)
+  deletedAt         DateTime?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([isActive, isDeleted])
+  @@index([isFeaturedMarquee])
+  @@map("brands")
+}
+
 // SubCategory model - child taxonomy under a main category
 model SubCategory {
   id          String   @id @default(uuid())
