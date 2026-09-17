@@ -85,10 +85,11 @@
 
 ### Module 7: Products & Variants (`/api/v1/products`)
 
-- [ ] **Product Model**: `name`, `slug`, `sku`, `price`, `discountPrice`, `stock`, `images`, `categoryId`
-- [ ] **Public Product Catalog**: Search, category filter, price range, brand, pagination
-- [ ] **Product Detail API**: Fetch by slug/ID with stock availability
-- [ ] **Admin Product Management**: Full CRUD with image upload support
+- [x] **Product, ProductImage & ProductVariant Models**: `name`, auto-generated `slug`, auto-generated `sku`, `price`, `originalPrice`, `costPrice`, `stock`, `lowStockThreshold`, `stockStatus`, storefront badge, voucher promo ribbon, SEO fields, dynamic specifications, R2 multi-image gallery, and color/size variants
+- [x] **Public Product Catalog**: Search, category filter, subcategory filter, brand filter, price range, voucher filter, pagination, and sorting
+- [x] **Product Detail API**: Fetch by slug/ID with full taxonomy, gallery images, and variant breakdown
+- [x] **Admin Product Management**: Full CRUD (`create`, `getAllAdmin`, `update`, `softDelete`) with Cloudflare R2 multi-image upload
+
 
 ### Module 8: Shopping Cart (`/api/v1/cart`)
 

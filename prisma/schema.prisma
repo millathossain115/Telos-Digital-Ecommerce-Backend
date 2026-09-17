@@ -27,6 +27,17 @@ enum AddressType {
   BILLING
 }
 
+enum DiscountType {
+  PERCENTAGE
+  FLAT
+}
+
+enum StockStatus {
+  IN_STOCK
+  OUT_OF_STOCK
+  LOW_STOCK
+}
+
 // ==================== MODELS ====================
 
 // Admin model - back-office administrators for TelosCart
@@ -110,6 +121,7 @@ model Category {
   image              String?
   imageKey           String?
   subCategories      SubCategory[]
+  products           Product[]
   isActive           Boolean    @default(true)
   isFeaturedHomepage Boolean    @default(false)
 
@@ -135,6 +147,7 @@ model Brand {
   description       String?
   image             String?
   imageKey          String?
+  products          Product[]
   isActive          Boolean  @default(true)
   isFeaturedMarquee Boolean  @default(false) // Featured in Official Brands Marquee
 
@@ -158,6 +171,7 @@ model SubCategory {
   name        String
   slug        String
   description String?
+  products    Product[]
   isActive    Boolean  @default(true)
 
   // Soft Delete Policy
@@ -172,3 +186,123 @@ model SubCategory {
   @@index([isActive, isDeleted])
   @@map("sub_categories")
 }
+
+// Product model - catalog items, inventory, badges, vouchers, and variant relations
+model Product {
+  id                    String          @id @default(uuid())
+  name                  String
+  slug                  String          @unique
+  sku                   String          @unique // Backend-generated: e.g. TC-PRD-2026-1042
+
+  // Pricing & Inventory (Strict Financial Decimal)
+  price                 Decimal         @db.Decimal(12, 2)
+  originalPrice         Decimal?        @db.Decimal(12, 2) // Regular / strikethrough price
+  costPrice             Decimal?        @db.Decimal(12, 2) // Optional internal cost
+  stock                 Int             @default(0)
+  lowStockThreshold     Int             @default(5)
+  stockStatus           StockStatus     @default(IN_STOCK)
+
+  // Storefront Badge (e.g. HOT, SALE, NEW, BESTSELLER)
+  showStorefrontBadge   Boolean         @default(false)
+  storefrontBadgeText   String?
+
+  // Special Voucher / Promo Discount attached to this item
+  hasVoucher            Boolean         @default(false)
+  voucherDiscountType   DiscountType?   // PERCENTAGE | FLAT
+  voucherDiscountValue  Decimal?        @db.Decimal(12, 2) // e.g. 10 (%) or 100 (৳)
+  voucherCouponCode     String?         // e.g. "TELOS10"
+  showVoucherBadge      Boolean         @default(false) // Ribbon directly on storefront card
+
+  // Taxonomy & Relations
+  categoryId            String
+  category              Category        @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  subCategoryId         String?
+  subCategory           SubCategory?    @relation(fields: [subCategoryId], references: [id], onDelete: SetNull)
+  brandId               String?
+  brand                 Brand?          @relation(fields: [brandId], references: [id], onDelete: SetNull)
+
+  // Media
+  thumbnail             String?
+  thumbnailKey          String?
+  images                ProductImage[]
+
+  // Details
+  shortDescription      String?
+  description           String?         @db.Text
+  specifications        Json?           // Dynamic specs, e.g. { "Material": "Cotton", "Fit": "Regular" }
+  warranty              String?         // e.g. "1 Year Official Brand Warranty"
+
+  // SEO Fields
+  metaTitle             String?
+  metaDescription       String?
+  metaKeywords          String?
+
+  // Variants (Color & Size)
+  hasVariants           Boolean         @default(false)
+  variants              ProductVariant[]
+
+  // Flags & Visibility
+  isFeatured            Boolean         @default(false)
+  isFlashDeal           Boolean         @default(false)
+  isActive              Boolean         @default(true)
+
+  // Soft Delete Policy
+  isDeleted             Boolean         @default(false)
+  deletedAt             DateTime?
+
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+
+  @@index([categoryId])
+  @@index([subCategoryId])
+  @@index([brandId])
+  @@index([isActive, isDeleted])
+  @@index([isFeatured])
+  @@index([isFlashDeal])
+  @@index([price])
+  @@map("products")
+}
+
+// ProductImage model - multi-image gallery with R2 keys and ordering
+model ProductImage {
+  id        String   @id @default(uuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  key       String
+  isThumbnail Boolean @default(false)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([productId])
+  @@map("product_images")
+}
+
+// ProductVariant model - color, size, and weight combinations with dedicated inventory
+model ProductVariant {
+  id            String    @id @default(uuid())
+  productId     String
+  product       Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  sku           String    @unique // e.g. TC-PRD-2026-1042-NAVY-M
+  color         String?   // e.g. "Navy Blue", "Red", "#FF0000"
+  size          String?   // e.g. "M", "L", "XL", "42"
+  weight        String?   // e.g. "250g", "500g", "1kg", "500ml"
+
+  price         Decimal?  @db.Decimal(12, 2) // Selling price
+  costPrice     Decimal?  @db.Decimal(12, 2) // Purchase price
+  originalPrice Decimal?  @db.Decimal(12, 2)
+  stock         Int       @default(0)
+
+  image         String?
+  imageKey      String?
+
+  isDeleted     Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([productId])
+  @@map("product_variants")
+}
+
+

@@ -11,7 +11,6 @@ router.get("/tree", CategoryController.getCategoryTree);
 router.get("/featured-homepage", CategoryController.getFeaturedHomepageCategories);
 router.get(
   "/parents",
-  auth("SUPER_ADMIN"),
   CategoryController.getParentCategories,
 );
 
@@ -23,7 +22,7 @@ router.post(
   CategoryController.createCategory,
 );
 
-router.get("/", auth("SUPER_ADMIN"), CategoryController.getAllCategories);
+router.get("/", CategoryController.getAllCategories);
 router.get("/slug/:slug", CategoryController.getCategoryBySlug);
 router.post(
   "/:categoryId/sub-categories",

@@ -49,7 +49,13 @@ export const swaggerDocument = {
       description:
         "Official brand catalog with taglines, the storefront brands marquee, and R2 imagery",
     },
+    {
+      name: "Products",
+      description:
+        "E-commerce product catalog, multi-image R2 gallery, badges, vouchers, SEO, and variants",
+    },
   ],
+
   components: {
     securitySchemes: {
       bearerAuth: {
@@ -798,5 +804,202 @@ export const swaggerDocument = {
         },
       },
     },
+    "/products": {
+      get: {
+        tags: ["Products"],
+        summary: "Public product catalog with search, filters, and pagination",
+        parameters: [
+          { name: "searchTerm", in: "query", schema: { type: "string" } },
+          { name: "categoryId", in: "query", schema: { type: "string" } },
+          { name: "subCategoryId", in: "query", schema: { type: "string" } },
+          { name: "brandId", in: "query", schema: { type: "string" } },
+          { name: "minPrice", in: "query", schema: { type: "number" } },
+          { name: "maxPrice", in: "query", schema: { type: "number" } },
+          { name: "hasVoucher", in: "query", schema: { type: "boolean" } },
+          { name: "isFeatured", in: "query", schema: { type: "boolean" } },
+          { name: "isFlashDeal", in: "query", schema: { type: "boolean" } },
+          { name: "stockStatus", in: "query", schema: { type: "string", enum: ["IN_STOCK", "OUT_OF_STOCK", "LOW_STOCK"] } },
+          { name: "page", in: "query", schema: { type: "integer", default: 1 } },
+          { name: "limit", in: "query", schema: { type: "integer", default: 20 } },
+          { name: "sortBy", in: "query", schema: { type: "string", default: "createdAt" } },
+          { name: "sortOrder", in: "query", schema: { type: "string", enum: ["asc", "desc"], default: "desc" } },
+        ],
+        responses: {
+          200: { description: "Products retrieved successfully" },
+        },
+      },
+      post: {
+        tags: ["Products"],
+        summary: "Create a new product (Super Admin only)",
+        description: "Multipart form-data supporting single thumbnail and multiple gallery images (R2), auto SKU generation, storefront badges, promo vouchers, and optional color/size variants.",
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          content: {
+            "multipart/form-data": {
+              schema: {
+                type: "object",
+                required: ["name", "price", "categoryId"],
+                properties: {
+                  name: { type: "string" },
+                  price: { type: "number" },
+                  originalPrice: { type: "number" },
+                  costPrice: { type: "number" },
+                  stock: { type: "integer", default: 0 },
+                  lowStockThreshold: { type: "integer", default: 5 },
+                  categoryId: { type: "string" },
+                  subCategoryId: { type: "string" },
+                  brandId: { type: "string" },
+                  showStorefrontBadge: { type: "boolean" },
+                  storefrontBadgeText: { type: "string" },
+                  hasVoucher: { type: "boolean" },
+                  voucherDiscountType: { type: "string", enum: ["PERCENTAGE", "FLAT"] },
+                  voucherDiscountValue: { type: "number" },
+                  voucherCouponCode: { type: "string" },
+                  showVoucherBadge: { type: "boolean" },
+                  shortDescription: { type: "string" },
+                  description: { type: "string" },
+                  specifications: { type: "string", description: "JSON stringified key-value object" },
+                  warranty: { type: "string" },
+                  metaTitle: { type: "string" },
+                  metaDescription: { type: "string" },
+                  metaKeywords: { type: "string" },
+                  hasVariants: { type: "boolean" },
+                  variants: { type: "string", description: "JSON stringified array of variant objects" },
+                  isFeatured: { type: "boolean" },
+                  isFlashDeal: { type: "boolean" },
+                  isActive: { type: "boolean", default: true },
+                  thumbnail: { type: "string", format: "binary" },
+                  images: { type: "array", items: { type: "string", format: "binary" } },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          201: { description: "Product created successfully" },
+          400: { description: "Validation error" },
+          401: { description: "Unauthorized" },
+        },
+      },
+    },
+    "/products/admin": {
+      get: {
+        tags: ["Products"],
+        summary: "Super Admin product catalog (includes drafts and stock health)",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "searchTerm", in: "query", schema: { type: "string" } },
+          { name: "categoryId", in: "query", schema: { type: "string" } },
+          { name: "subCategoryId", in: "query", schema: { type: "string" } },
+          { name: "brandId", in: "query", schema: { type: "string" } },
+          { name: "isActive", in: "query", schema: { type: "boolean" } },
+          { name: "stockStatus", in: "query", schema: { type: "string" } },
+          { name: "isFeatured", in: "query", schema: { type: "boolean" } },
+          { name: "isFlashDeal", in: "query", schema: { type: "boolean" } },
+          { name: "page", in: "query", schema: { type: "integer", default: 1 } },
+          { name: "limit", in: "query", schema: { type: "integer", default: 20 } },
+          { name: "sortBy", in: "query", schema: { type: "string", default: "createdAt" } },
+          { name: "sortOrder", in: "query", schema: { type: "string", enum: ["asc", "desc"], default: "desc" } },
+        ],
+        responses: {
+          200: { description: "Admin products retrieved successfully" },
+          401: { description: "Unauthorized" },
+        },
+      },
+    },
+    "/products/slug/{slug}": {
+      get: {
+        tags: ["Products"],
+        summary: "Public product details by slug",
+        parameters: [
+          { name: "slug", in: "path", required: true, schema: { type: "string" } },
+        ],
+        responses: {
+          200: { description: "Product retrieved successfully" },
+          404: { description: "Product not found" },
+        },
+      },
+    },
+    "/products/{id}": {
+      get: {
+        tags: ["Products"],
+        summary: "Get product details by ID",
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "string" } },
+        ],
+        responses: {
+          200: { description: "Product retrieved successfully" },
+          404: { description: "Product not found" },
+        },
+      },
+      patch: {
+        tags: ["Products"],
+        summary: "Update product (Super Admin only)",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "string" } },
+        ],
+        requestBody: {
+          content: {
+            "multipart/form-data": {
+              schema: {
+                type: "object",
+                properties: {
+                  name: { type: "string" },
+                  price: { type: "number" },
+                  originalPrice: { type: "number" },
+                  costPrice: { type: "number" },
+                  stock: { type: "integer" },
+                  lowStockThreshold: { type: "integer" },
+                  categoryId: { type: "string" },
+                  subCategoryId: { type: "string" },
+                  brandId: { type: "string" },
+                  showStorefrontBadge: { type: "boolean" },
+                  storefrontBadgeText: { type: "string" },
+                  hasVoucher: { type: "boolean" },
+                  voucherDiscountType: { type: "string", enum: ["PERCENTAGE", "FLAT"] },
+                  voucherDiscountValue: { type: "number" },
+                  voucherCouponCode: { type: "string" },
+                  showVoucherBadge: { type: "boolean" },
+                  shortDescription: { type: "string" },
+                  description: { type: "string" },
+                  specifications: { type: "string" },
+                  warranty: { type: "string" },
+                  metaTitle: { type: "string" },
+                  metaDescription: { type: "string" },
+                  metaKeywords: { type: "string" },
+                  hasVariants: { type: "boolean" },
+                  variants: { type: "string" },
+                  isFeatured: { type: "boolean" },
+                  isFlashDeal: { type: "boolean" },
+                  isActive: { type: "boolean" },
+                  removeThumbnail: { type: "boolean" },
+                  removeImageIds: { type: "string" },
+                  thumbnail: { type: "string", format: "binary" },
+                  images: { type: "array", items: { type: "string", format: "binary" } },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: "Product updated successfully" },
+          404: { description: "Product not found" },
+        },
+      },
+      delete: {
+        tags: ["Products"],
+        summary: "Soft delete product (Super Admin only)",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "string" } },
+        ],
+        responses: {
+          200: { description: "Product deleted successfully" },
+          404: { description: "Product not found" },
+        },
+      },
+    },
   },
 };
+

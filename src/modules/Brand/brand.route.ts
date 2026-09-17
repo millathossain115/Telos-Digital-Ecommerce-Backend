@@ -17,9 +17,9 @@ router.post(
   BrandController.createBrand,
 );
 
-router.get("/", auth("SUPER_ADMIN"), BrandController.getAllBrands);
+router.get("/", BrandController.getAllBrands);
 router.get("/slug/:slug", BrandController.getBrandBySlug);
-router.get("/:id", auth("SUPER_ADMIN"), BrandController.getBrandById);
+router.get("/:id", BrandController.getBrandById);
 
 router.patch(
   "/:id",
