@@ -51,6 +51,11 @@ export type TAuthResponse = {
   user: TAuthProfileResponse;
 };
 
+export type TUpdateProfilePayload = {
+  name?: string;
+  avatar?: string;
+};
+
 export type TRefreshTokenResponse = {
   accessToken: string;
 };

@@ -12,6 +12,7 @@ import {
   TCustomerRegisterPayload,
   TLoginPayload,
   TRefreshTokenResponse,
+  TUpdateProfilePayload,
 } from "./auth.interface";
 
 // Helper to generate unique Customer ID (e.g. TC-2026-1042)
@@ -500,6 +501,106 @@ const changePassword = async (
   return { message: "Password updated successfully" };
 };
 
+const updateMe = async (
+  userId: string,
+  role: TRole,
+  payload: TUpdateProfilePayload,
+): Promise<TAuthProfileResponse> => {
+  if (role === "SUPER_ADMIN") {
+    const admin = await prisma.admin.findUnique({
+      where: { id: userId },
+    });
+
+    if (!admin || admin.isDeleted) {
+      throw new AppError(httpStatus.NOT_FOUND, "Admin not found");
+    }
+
+    const updated = await prisma.admin.update({
+      where: { id: userId },
+      data: {
+        ...(payload.name !== undefined && { name: payload.name.trim() }),
+        ...(payload.avatar !== undefined && { avatar: payload.avatar }),
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        avatar: true,
+        status: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    return {
+      id: updated.id,
+      name: updated.name,
+      email: updated.email,
+      phone: updated.phone,
+      avatar: updated.avatar,
+      role: "SUPER_ADMIN",
+      status: updated.status,
+      createdAt: updated.createdAt,
+      updatedAt: updated.updatedAt,
+    };
+  }
+
+  const customer = await prisma.customer.findUnique({
+    where: { id: userId },
+  });
+
+  if (!customer || customer.isDeleted) {
+    throw new AppError(httpStatus.NOT_FOUND, "Customer not found");
+  }
+
+  const updated = await prisma.customer.update({
+    where: { id: userId },
+    data: {
+      ...(payload.name !== undefined && { name: payload.name.trim() }),
+      ...(payload.avatar !== undefined && { avatar: payload.avatar }),
+    },
+    select: {
+      id: true,
+      customerId: true,
+      name: true,
+      email: true,
+      phone: true,
+      avatar: true,
+      status: true,
+      createdAt: true,
+      updatedAt: true,
+      addresses: {
+        select: {
+          id: true,
+          title: true,
+          type: true,
+          isDefault: true,
+          street: true,
+          city: true,
+          state: true,
+          postalCode: true,
+          country: true,
+        },
+      },
+    },
+  });
+
+  return {
+    id: updated.id,
+    customerId: updated.customerId,
+    name: updated.name,
+    email: updated.email,
+    phone: updated.phone,
+    avatar: updated.avatar,
+    role: "CUSTOMER",
+    status: updated.status,
+    addresses: updated.addresses,
+    createdAt: updated.createdAt,
+    updatedAt: updated.updatedAt,
+  };
+};
+
 export const AuthService = {
   registerCustomer,
   loginCustomer,
@@ -508,4 +609,5 @@ export const AuthService = {
   refreshToken,
   getMe,
   changePassword,
+  updateMe,
 };

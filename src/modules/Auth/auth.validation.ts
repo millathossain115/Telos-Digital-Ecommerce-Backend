@@ -74,9 +74,17 @@ const changePasswordValidationSchema = z.object({
   }),
 });
 
+const updateProfileValidationSchema = z.object({
+  body: z.object({
+    name: z.string().trim().min(1, "Name is required").optional(),
+    avatar: z.string().url("Avatar must be a valid URL").optional(),
+  }),
+});
+
 export const AuthValidation = {
   customerRegisterValidationSchema,
   loginValidationSchema,
   refreshTokenValidationSchema,
   changePasswordValidationSchema,
+  updateProfileValidationSchema,
 };

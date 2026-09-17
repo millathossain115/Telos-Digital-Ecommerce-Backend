@@ -51,6 +51,14 @@ router.post(
 // Current Authenticated Profile
 router.get("/me", auth(), AuthController.getMe);
 
+// Update Profile (name, phone, avatar)
+router.patch(
+  "/me",
+  auth(),
+  validateRequest(AuthValidation.updateProfileValidationSchema),
+  AuthController.updateMe,
+);
+
 // Change Password
 router.post(
   "/change-password",

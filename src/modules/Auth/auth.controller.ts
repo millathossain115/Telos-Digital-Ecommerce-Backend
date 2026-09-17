@@ -128,6 +128,19 @@ const logout = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const updateMe = catchAsync(async (req: Request, res: Response) => {
+  const userId = req.user!.id;
+  const role = req.user!.role;
+  const result = await AuthService.updateMe(userId, role, req.body);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Profile updated successfully",
+    data: result,
+  });
+});
+
 export const AuthController = {
   registerCustomer,
   loginCustomer,
@@ -136,5 +149,6 @@ export const AuthController = {
   refreshToken,
   getMe,
   changePassword,
+  updateMe,
   logout,
 };
