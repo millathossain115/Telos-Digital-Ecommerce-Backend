@@ -164,6 +164,20 @@ const deleteCustomer = async (idOrCustomerId: string) => {
 
 // ==================== CUSTOMER ADDRESSES ====================
 
+const getMyAddresses = async (customerId: string) => {
+  await getCustomerById(customerId);
+
+  const addresses = await prisma.customerAddress.findMany({
+    where: { customerId },
+    orderBy: [
+      { isDefault: "desc" },
+      { createdAt: "desc" },
+    ],
+  });
+
+  return addresses;
+};
+
 const addAddress = async (
   customerId: string,
   payload: TCreateAddressPayload,
@@ -171,8 +185,13 @@ const addAddress = async (
   // Check customer exists
   await getCustomerById(customerId);
 
-  // If new address is default, reset other addresses for this customer
-  if (payload.isDefault) {
+  const existingCount = await prisma.customerAddress.count({
+    where: { customerId },
+  });
+
+  const shouldBeDefault = existingCount === 0 || payload.isDefault === true;
+
+  if (shouldBeDefault) {
     await prisma.customerAddress.updateMany({
       where: { customerId },
       data: { isDefault: false },
@@ -182,6 +201,7 @@ const addAddress = async (
   const address = await prisma.customerAddress.create({
     data: {
       ...payload,
+      isDefault: shouldBeDefault,
       customerId,
     },
   });
@@ -217,6 +237,28 @@ const updateAddress = async (
   return updated;
 };
 
+const setDefaultAddress = async (customerId: string, addressId: string) => {
+  const existing = await prisma.customerAddress.findFirst({
+    where: { id: addressId, customerId },
+  });
+
+  if (!existing) {
+    throw new AppError(httpStatus.NOT_FOUND, "Address not found");
+  }
+
+  await prisma.customerAddress.updateMany({
+    where: { customerId },
+    data: { isDefault: false },
+  });
+
+  const updated = await prisma.customerAddress.update({
+    where: { id: addressId },
+    data: { isDefault: true },
+  });
+
+  return updated;
+};
+
 const deleteAddress = async (customerId: string, addressId: string) => {
   const existing = await prisma.customerAddress.findFirst({
     where: { id: addressId, customerId },
@@ -230,6 +272,20 @@ const deleteAddress = async (customerId: string, addressId: string) => {
     where: { id: addressId },
   });
 
+  if (existing.isDefault) {
+    const nextAddress = await prisma.customerAddress.findFirst({
+      where: { customerId },
+      orderBy: { createdAt: "desc" },
+    });
+
+    if (nextAddress) {
+      await prisma.customerAddress.update({
+        where: { id: nextAddress.id },
+        data: { isDefault: true },
+      });
+    }
+  }
+
   return { message: "Address deleted successfully" };
 };
 
@@ -238,7 +294,9 @@ export const CustomerService = {
   getCustomerById,
   updateCustomer,
   deleteCustomer,
+  getMyAddresses,
   addAddress,
   updateAddress,
+  setDefaultAddress,
   deleteAddress,
 };

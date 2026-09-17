@@ -15,11 +15,16 @@ export type TUpdateCustomerPayload = {
 };
 
 export type TCreateAddressPayload = {
+  name?: string;
+  phone?: string;
   title?: string;
   type?: AddressType;
   isDefault?: boolean;
   street: string;
   city: string;
+  area?: string;
+  union?: string;
+  zone?: string;
   state?: string;
   postalCode?: string;
   country?: string;

@@ -86,6 +86,18 @@ const deleteCustomer = catchAsync(async (req: Request, res: Response) => {
 
 // ==================== ADDRESS HANDLERS ====================
 
+const getMyAddresses = catchAsync(async (req: Request, res: Response) => {
+  const customerId = req.user!.id;
+  const result = await CustomerService.getMyAddresses(customerId);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Addresses retrieved successfully",
+    data: result,
+  });
+});
+
 const addAddress = catchAsync(async (req: Request, res: Response) => {
   const customerId = req.user!.id;
   const result = await CustomerService.addAddress(customerId, req.body);
@@ -115,6 +127,19 @@ const updateAddress = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const setDefaultAddress = catchAsync(async (req: Request, res: Response) => {
+  const customerId = req.user!.id;
+  const { addressId } = req.params;
+  const result = await CustomerService.setDefaultAddress(customerId, addressId);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Default address updated successfully",
+    data: result,
+  });
+});
+
 const deleteAddress = catchAsync(async (req: Request, res: Response) => {
   const customerId = req.user!.id;
   const { addressId } = req.params;
@@ -133,7 +158,9 @@ export const CustomerController = {
   getCustomerById,
   updateCustomer,
   deleteCustomer,
+  getMyAddresses,
   addAddress,
   updateAddress,
+  setDefaultAddress,
   deleteAddress,
 };

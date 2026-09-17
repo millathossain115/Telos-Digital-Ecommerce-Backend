@@ -79,11 +79,16 @@ model CustomerAddress {
   id         String      @id @default(uuid())
   customerId String
   customer   Customer    @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  title      String?     // e.g. "Home", "Office"
+  name       String?     // Recipient Name
+  phone      String?     // Recipient Phone
+  title      String?     // e.g. "Home", "Office", "Other"
   type       AddressType @default(SHIPPING)
   isDefault  Boolean     @default(false)
   street     String
-  city       String
+  city       String      // District
+  area       String?     // Upazila
+  union      String?     // Union
+  zone       String?     // "inside-dhaka" | "outside-dhaka"
   state      String?
   postalCode String?
   country    String      @default("Bangladesh")
@@ -91,6 +96,7 @@ model CustomerAddress {
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
 
+  @@index([customerId])
   @@map("customer_addresses")
 }
 

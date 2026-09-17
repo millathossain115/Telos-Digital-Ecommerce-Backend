@@ -7,11 +7,23 @@ import { CustomerValidation } from "./customer.validation";
 const router = Router();
 
 // Customer Addresses management
+router.get(
+  "/addresses",
+  auth("CUSTOMER"),
+  CustomerController.getMyAddresses,
+);
+
 router.post(
   "/addresses",
   auth("CUSTOMER"),
   validateRequest(CustomerValidation.createAddressValidationSchema),
   CustomerController.addAddress,
+);
+
+router.patch(
+  "/addresses/:addressId/default",
+  auth("CUSTOMER"),
+  CustomerController.setDefaultAddress,
 );
 
 router.patch(
