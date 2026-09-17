@@ -483,12 +483,77 @@ async function main() {
     }
   }
 
+  // ═══════════════════════════════════════════════════════════════
+  // 6. SEED DEMO CUSTOMER CARTS & WISHLISTS
+  // ═══════════════════════════════════════════════════════════════
+
+  console.log("\n🛒 Seeding active customer shopping carts & wishlists...");
+  const sampleProducts = await prisma.product.findMany({
+    take: 30,
+    select: { id: true },
+  });
+
+  let totalCartsSeeded = 0;
+  let totalWishlistsSeeded = 0;
+
+  if (sampleProducts.length > 0) {
+    for (let c = 0; c < Math.min(6, allCustomers.length); c++) {
+      const customer = allCustomers[c];
+
+      // Seed 1-3 cart items for this customer
+      const cartProductCount = 1 + (c % 3);
+      for (let cp = 0; cp < cartProductCount; cp++) {
+        const prodIndex = (c * 4 + cp) % sampleProducts.length;
+        const productId = sampleProducts[prodIndex].id;
+
+        const existingCart = await prisma.cartItem.findFirst({
+          where: { customerId: customer.id, productId },
+        });
+
+        if (!existingCart) {
+          await prisma.cartItem.create({
+            data: {
+              customerId: customer.id,
+              productId,
+              quantity: 1 + (cp % 2),
+            },
+          });
+          totalCartsSeeded++;
+        }
+      }
+
+      // Seed 2-4 wishlist items for this customer
+      const wishlistProductCount = 2 + (c % 3);
+      for (let wp = 0; wp < wishlistProductCount; wp++) {
+        const prodIndex = (c * 5 + wp + 7) % sampleProducts.length;
+        const productId = sampleProducts[prodIndex].id;
+
+        await prisma.wishlistItem.upsert({
+          where: {
+            customerId_productId: {
+              customerId: customer.id,
+              productId,
+            },
+          },
+          update: {},
+          create: {
+            customerId: customer.id,
+            productId,
+          },
+        });
+        totalWishlistsSeeded++;
+      }
+    }
+  }
+
   console.log("\n🎉 TelosCart database seeding completed successfully!");
   console.log(`   Categories: ${categoryMap.size}`);
   console.log(`   Subcategories: ${subcategoryMap.size}`);
   console.log(`   Brands: ${brandMap.size}`);
   console.log(`   Products: ${productsData.length}`);
   console.log(`   Total Verified Reviews Seeded: ${totalReviewsSeeded}`);
+  console.log(`   Sample Cart Items Seeded: ${totalCartsSeeded}`);
+  console.log(`   Sample Wishlist Items Seeded: ${totalWishlistsSeeded}`);
 }
 
 main()

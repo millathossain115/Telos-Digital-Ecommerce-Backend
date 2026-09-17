@@ -8,8 +8,10 @@ import { BrandRoutes } from "../modules/Brand/brand.route";
 import { CategoryRoutes } from "../modules/Category/category.route";
 import { CustomerRoutes } from "../modules/Customer/customer.route";
 import { HealthRoutes } from "../modules/Health/health.route";
+import { CartRoutes } from "../modules/Cart/cart.route";
 import { ProductRoutes } from "../modules/Product/product.route";
 import { UploadRoutes } from "../modules/Upload/upload.route";
+import { WishlistRoutes } from "../modules/Wishlist/wishlist.route";
 
 const router = Router();
 
@@ -63,6 +65,14 @@ const moduleRoutes = [
   {
     path: "/products",
     route: ProductRoutes,
+  },
+  {
+    path: "/cart",
+    route: CartRoutes,
+  },
+  {
+    path: "/wishlist",
+    route: WishlistRoutes,
   },
 ];
 

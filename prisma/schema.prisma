@@ -76,7 +76,11 @@ model Customer {
   addresses  CustomerAddress[]
 
   // Reviews written by this customer
-  reviews    Review[]
+  reviews       Review[]
+
+  // Cart & Wishlist relations
+  cartItems     CartItem[]
+  wishlistItems WishlistItem[]
 
   // Soft Delete Policy
   isDeleted  Boolean           @default(false)
@@ -244,8 +248,10 @@ model Product {
   hasVariants           Boolean         @default(false)
   variants              ProductVariant[]
 
-  // Reviews
+  // Reviews, Cart & Wishlist
   reviews               Review[]
+  cartItems             CartItem[]
+  wishlistItems         WishlistItem[]
 
   // Ratings & Reviews (Denormalized aggregates — updated when Review model is added)
   rating                Float           @default(0) // Average rating 0.0–5.0
@@ -307,6 +313,8 @@ model ProductVariant {
   image         String?
   imageKey      String?
 
+  cartItems     CartItem[]
+
   isDeleted     Boolean   @default(false)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -338,4 +346,40 @@ model Review {
   @@index([customerId])
   @@index([rating])
   @@map("reviews")
+}
+
+// CartItem model - customer shopping cart line items
+model CartItem {
+  id          String          @id @default(uuid())
+  customerId  String
+  customer    Customer        @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variantId   String?
+  variant     ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+  quantity    Int             @default(1)
+
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([customerId])
+  @@index([productId])
+  @@map("cart_items")
+}
+
+// WishlistItem model - customer saved wishlist items
+model WishlistItem {
+  id          String   @id @default(uuid())
+  customerId  String
+  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([customerId, productId])
+  @@index([customerId])
+  @@index([productId])
+  @@map("wishlist_items")
 }
