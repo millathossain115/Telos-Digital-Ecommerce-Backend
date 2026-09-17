@@ -4,6 +4,7 @@ import { AdminRoutes } from "../modules/Admin/admin.route";
 import { AuthController } from "../modules/Auth/auth.controller";
 import { AuthRoutes } from "../modules/Auth/auth.route";
 import { AuthValidation } from "../modules/Auth/auth.validation";
+import { CategoryRoutes } from "../modules/Category/category.route";
 import { CustomerRoutes } from "../modules/Customer/customer.route";
 import { HealthRoutes } from "../modules/Health/health.route";
 import { UploadRoutes } from "../modules/Upload/upload.route";
@@ -48,6 +49,10 @@ const moduleRoutes = [
   {
     path: "/uploads",
     route: UploadRoutes,
+  },
+  {
+    path: "/categories",
+    route: CategoryRoutes,
   },
 ];
 

@@ -3,3 +3,7 @@ dist
 .env
 *.log
 .DS_Store
+.vscode/
+start-local-dev.bat
+start-db-studio.bat
+start-full-stack-dev.bat

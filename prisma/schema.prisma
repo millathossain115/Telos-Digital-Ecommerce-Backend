@@ -93,3 +93,51 @@ model CustomerAddress {
 
   @@map("customer_addresses")
 }
+
+// Category model - product hierarchy for storefront navigation and catalog filtering
+model Category {
+  id                 String        @id @default(uuid())
+  name               String
+  slug               String     @unique
+  description        String?
+  icon               String?
+  image              String?
+  imageKey           String?
+  subCategories      SubCategory[]
+  isActive           Boolean    @default(true)
+  isFeaturedHomepage Boolean    @default(false)
+
+  // Soft Delete Policy
+  isDeleted          Boolean    @default(false)
+  deletedAt          DateTime?
+
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+
+  @@index([isActive, isDeleted])
+  @@index([isFeaturedHomepage])
+  @@map("categories")
+}
+
+// SubCategory model - child taxonomy under a main category
+model SubCategory {
+  id          String   @id @default(uuid())
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  name        String
+  slug        String
+  description String?
+  isActive    Boolean  @default(true)
+
+  // Soft Delete Policy
+  isDeleted   Boolean  @default(false)
+  deletedAt   DateTime?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([categoryId, slug])
+  @@index([categoryId])
+  @@index([isActive, isDeleted])
+  @@map("sub_categories")
+}

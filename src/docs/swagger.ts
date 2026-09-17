@@ -39,6 +39,11 @@ export const swaggerDocument = {
       description:
         "Back-office administrator accounts and dashboard operations",
     },
+    {
+      name: "Categories",
+      description:
+        "Product category hierarchy, subcategories, homepage featuring, and R2 imagery",
+    },
   ],
   components: {
     securitySchemes: {
@@ -127,6 +132,26 @@ export const swaggerDocument = {
               user: { type: "object" },
             },
           },
+        },
+      },
+      Category: {
+        type: "object",
+        properties: {
+          id: { type: "string", format: "uuid" },
+          name: { type: "string", example: "Smartphones & Tablets" },
+          slug: { type: "string", example: "smartphones-tablets" },
+          description: { type: "string", nullable: true },
+          icon: { type: "string", nullable: true },
+          image: { type: "string", nullable: true },
+          imageKey: { type: "string", nullable: true },
+          isActive: { type: "boolean", example: true },
+          isFeaturedHomepage: { type: "boolean", example: true },
+          subCategories: {
+            type: "array",
+            items: { type: "object" },
+          },
+          createdAt: { type: "string", format: "date-time" },
+          updatedAt: { type: "string", format: "date-time" },
         },
       },
     },
@@ -327,6 +352,257 @@ export const swaggerDocument = {
         responses: {
           200: { description: "List of customers" },
           403: { description: "Forbidden - Super Admin required" },
+        },
+      },
+    },
+    "/categories": {
+      get: {
+        tags: ["Categories"],
+        summary: "List categories for admin",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "searchTerm", in: "query", schema: { type: "string" } },
+          { name: "isActive", in: "query", schema: { type: "boolean" } },
+          {
+            name: "isFeaturedHomepage",
+            in: "query",
+            schema: { type: "boolean" },
+          },
+          { name: "page", in: "query", schema: { type: "integer" } },
+          { name: "limit", in: "query", schema: { type: "integer" } },
+          { name: "sortBy", in: "query", schema: { type: "string" } },
+          {
+            name: "sortOrder",
+            in: "query",
+            schema: { type: "string", enum: ["asc", "desc"] },
+          },
+        ],
+        responses: {
+          200: { description: "Categories retrieved successfully" },
+          403: { description: "Forbidden - Super Admin required" },
+        },
+      },
+      post: {
+        tags: ["Categories"],
+        summary: "Create category or subcategory",
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "multipart/form-data": {
+              schema: {
+                type: "object",
+                required: ["name"],
+                properties: {
+                  name: { type: "string" },
+                  description: { type: "string" },
+                  icon: { type: "string", example: "Shirt" },
+                  subCategories: {
+                    type: "string",
+                    description:
+                      "JSON array string, e.g. [{\"name\":\"Men Shoes\"}]",
+                  },
+                  isActive: { type: "boolean", default: true },
+                  isFeaturedHomepage: { type: "boolean", default: false },
+                  image: { type: "string", format: "binary" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          201: { description: "Category created successfully" },
+          400: { description: "Validation or hierarchy error" },
+        },
+      },
+    },
+    "/categories/tree": {
+      get: {
+        tags: ["Categories"],
+        summary: "Get active public category tree",
+        responses: {
+          200: { description: "Category tree retrieved successfully" },
+        },
+      },
+    },
+    "/categories/featured-homepage": {
+      get: {
+        tags: ["Categories"],
+        summary: "Get active categories featured on homepage",
+        responses: {
+          200: {
+            description: "Featured homepage categories retrieved successfully",
+          },
+        },
+      },
+    },
+    "/categories/parents": {
+      get: {
+        tags: ["Categories"],
+        summary: "Get top-level categories for admin parent dropdown",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { description: "Parent categories retrieved successfully" },
+        },
+      },
+    },
+    "/categories/slug/{slug}": {
+      get: {
+        tags: ["Categories"],
+        summary: "Get active category by slug",
+        parameters: [
+          {
+            name: "slug",
+            in: "path",
+            required: true,
+            schema: { type: "string" },
+          },
+        ],
+        responses: {
+          200: { description: "Category retrieved successfully" },
+          404: { description: "Category not found" },
+        },
+      },
+    },
+    "/categories/{id}": {
+      get: {
+        tags: ["Categories"],
+        summary: "Get category by id for admin",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "string" },
+          },
+        ],
+        responses: {
+          200: { description: "Category retrieved successfully" },
+        },
+      },
+      patch: {
+        tags: ["Categories"],
+        summary: "Update category or subcategory",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "string" },
+          },
+        ],
+        requestBody: {
+          content: {
+            "multipart/form-data": {
+              schema: {
+                type: "object",
+                properties: {
+                  name: { type: "string" },
+                  description: { type: "string" },
+                  icon: { type: "string" },
+                  subCategories: {
+                    type: "string",
+                    description:
+                      "JSON array string replacing the current subcategory list",
+                  },
+                  isActive: { type: "boolean" },
+                  isFeaturedHomepage: { type: "boolean" },
+                  removeImage: { type: "boolean" },
+                  image: { type: "string", format: "binary" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: "Category updated successfully" },
+        },
+      },
+      delete: {
+        tags: ["Categories"],
+        summary: "Soft delete category",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "string" },
+          },
+        ],
+        responses: {
+          200: { description: "Category deleted successfully" },
+          400: { description: "Category has active children" },
+        },
+      },
+    },
+    "/categories/{categoryId}/sub-categories": {
+      post: {
+        tags: ["Categories"],
+        summary: "Create subcategory under a main category",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "categoryId",
+            in: "path",
+            required: true,
+            schema: { type: "string" },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["name"],
+                properties: {
+                  name: { type: "string", example: "Men Shoes" },
+                  description: { type: "string" },
+                  isActive: { type: "boolean" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          201: { description: "Subcategory created successfully" },
+        },
+      },
+    },
+    "/categories/sub-categories/{id}": {
+      patch: {
+        tags: ["Categories"],
+        summary: "Update subcategory",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "string" },
+          },
+        ],
+        responses: {
+          200: { description: "Subcategory updated successfully" },
+        },
+      },
+      delete: {
+        tags: ["Categories"],
+        summary: "Soft delete subcategory",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "string" },
+          },
+        ],
+        responses: {
+          200: { description: "Subcategory deleted successfully" },
         },
       },
     },

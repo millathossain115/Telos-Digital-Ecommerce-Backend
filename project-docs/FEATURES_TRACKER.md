@@ -68,9 +68,9 @@
 
 ### Module 5: Categories Catalog (`/api/v1/categories`)
 
-- [ ] **Category Model**: `id`, `name`, `slug`, `image`, `parentId` (hierarchy), `isActive`
-- [ ] **Public Category Tree API**: Hierarchical listing for header mega-menu
-- [ ] **Admin Category CRUD**: Create, update, reorder, delete
+- [x] **Category & SubCategory Models**: main `categories` table with image/icon/homepage fields and separate `sub_categories` table under category
+- [x] **Public Category Tree API**: Hierarchical listing for header mega-menu
+- [x] **Admin Category CRUD**: Create, update, reorder, delete with R2 image upload
 
 ### Module 6: Products & Variants (`/api/v1/products`)
 
