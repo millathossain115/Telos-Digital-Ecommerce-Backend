@@ -66,7 +66,14 @@ const withDisplayImageUrl = async <
 >(
   brand: T,
 ) => {
-  if (!brand.imageKey || config.r2.public_base_url) return brand;
+  if (
+    !brand.imageKey ||
+    brand.imageKey === "external" ||
+    brand.imageKey.startsWith("http") ||
+    config.r2.public_base_url
+  ) {
+    return brand;
+  }
 
   return {
     ...brand,
@@ -141,7 +148,7 @@ const createBrand = async (
   file?: Express.Multer.File,
   actorId?: string,
 ) => {
-  if (payload.isFeaturedMarquee && !file) {
+  if (payload.isFeaturedMarquee && !file && !payload.imageUrl) {
     throw new AppError(
       httpStatus.BAD_REQUEST,
       "Brands featured in the official brands marquee require an image",
@@ -149,9 +156,19 @@ const createBrand = async (
   }
 
   const slug = await createUniqueBrandSlug(payload.name);
-  const imagePayload = file
-    ? await uploadBrandImage(file, slug, actorId)
-    : { image: undefined, imageKey: undefined };
+  let imagePayload: { image?: string; imageKey?: string } = {
+    image: undefined,
+    imageKey: undefined,
+  };
+
+  if (file) {
+    imagePayload = await uploadBrandImage(file, slug, actorId);
+  } else if (payload.imageUrl && payload.imageUrl.trim()) {
+    imagePayload = {
+      image: payload.imageUrl.trim(),
+      imageKey: "external",
+    };
+  }
 
   const brand = await prisma.brand.create({
     data: {
@@ -265,6 +282,7 @@ const updateBrand = async (
   if (
     nextIsFeaturedMarquee &&
     !file &&
+    !payload.imageUrl &&
     (willRemoveImage || !existing.image)
   ) {
     throw new AppError(
@@ -276,9 +294,26 @@ const updateBrand = async (
   const nextSlug = payload.name
     ? await createUniqueBrandSlug(payload.name, id)
     : existing.slug;
-  const nextImagePayload = file
-    ? await uploadBrandImage(file, nextSlug, actorId)
-    : undefined;
+
+  let nextImagePayload:
+    | { image: string | null; imageKey: string | null }
+    | undefined = undefined;
+
+  if (file) {
+    nextImagePayload = await uploadBrandImage(file, nextSlug, actorId);
+  } else if (payload.imageUrl !== undefined) {
+    if (payload.imageUrl && payload.imageUrl.trim()) {
+      nextImagePayload = {
+        image: payload.imageUrl.trim(),
+        imageKey: "external",
+      };
+    } else {
+      nextImagePayload = {
+        image: null,
+        imageKey: null,
+      };
+    }
+  }
 
   await prisma.brand.update({
     where: { id },
@@ -299,9 +334,10 @@ const updateBrand = async (
       ...(payload.isFeaturedMarquee !== undefined && {
         isFeaturedMarquee: payload.isFeaturedMarquee,
       }),
-      ...(nextImagePayload && nextImagePayload),
+      ...(nextImagePayload ? nextImagePayload : {}),
       ...(willRemoveImage &&
-        !file && {
+        !file &&
+        payload.imageUrl === undefined && {
           image: null,
           imageKey: null,
         }),
@@ -310,6 +346,8 @@ const updateBrand = async (
 
   const shouldDeleteOldImage =
     existing.imageKey &&
+    existing.imageKey !== "external" &&
+    !existing.imageKey.startsWith("http") &&
     ((nextImagePayload && nextImagePayload.imageKey !== existing.imageKey) ||
       willRemoveImage);
 

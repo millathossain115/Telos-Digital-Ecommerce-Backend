@@ -119,7 +119,11 @@ const withDisplayImageUrl = async <T extends { thumbnailKey?: string | null; thu
 ): Promise<T> => {
   let displayThumbnail = product.thumbnail;
 
-  if (product.thumbnailKey) {
+  if (
+    product.thumbnailKey &&
+    product.thumbnailKey !== "external" &&
+    !product.thumbnailKey.startsWith("http")
+  ) {
     if (config.r2.public_base_url) {
       displayThumbnail = getPublicImageUrl(product.thumbnailKey);
     } else {
@@ -135,7 +139,7 @@ const withDisplayImageUrl = async <T extends { thumbnailKey?: string | null; thu
   if (product.images && product.images.length > 0) {
     formattedImages = await Promise.all(
       product.images.map(async (img) => {
-        if (!img.key) return img;
+        if (!img.key || img.key === "external" || img.key.startsWith("http")) return img;
         if (config.r2.public_base_url) {
           return { ...img, url: getPublicImageUrl(img.key) };
         }
@@ -231,12 +235,14 @@ const createProduct = async (
   const slug = await createUniqueProductSlug(payload.name);
   const sku = await generateProductSku();
 
-  // 5. Handle Image Uploads
+  // 5. Handle Image Uploads & Direct URLs
   let thumbnailData: { key: string; url: string } | null = null;
   const galleryImagesData: { key: string; url: string; order: number }[] = [];
 
   if (files?.thumbnail?.[0]) {
     thumbnailData = await uploadFileToR2(files.thumbnail[0], "thumb");
+  } else if (payload.thumbnailUrl) {
+    thumbnailData = { key: "external", url: payload.thumbnailUrl.trim() };
   }
 
   if (files?.images && files.images.length > 0) {
@@ -244,16 +250,55 @@ const createProduct = async (
       const uploaded = await uploadFileToR2(files.images[i], `gal-${i + 1}`);
       galleryImagesData.push({
         ...uploaded,
-        order: i,
+        order: galleryImagesData.length,
       });
     }
-    // If no explicit thumbnail was provided, make the first gallery image the thumbnail
-    if (!thumbnailData && galleryImagesData.length > 0) {
-      thumbnailData = {
-        key: galleryImagesData[0].key,
-        url: galleryImagesData[0].url,
-      };
+  }
+
+  // Support imageUrls whether array or JSON string
+  let parsedImageUrls: string[] = [];
+  if (Array.isArray(payload.imageUrls)) {
+    parsedImageUrls = payload.imageUrls;
+  } else if (typeof payload.imageUrls === "string") {
+    try {
+      const parsed = JSON.parse(payload.imageUrls);
+      parsedImageUrls = Array.isArray(parsed) ? parsed : [parsed];
+    } catch {
+      parsedImageUrls = [payload.imageUrls];
     }
+  }
+
+  if (parsedImageUrls.length > 0) {
+    for (const imgUrl of parsedImageUrls) {
+      const trimmed = typeof imgUrl === "string" ? imgUrl.trim() : "";
+      if (trimmed) {
+        galleryImagesData.push({
+          key: "external",
+          url: trimmed,
+          order: galleryImagesData.length,
+        });
+      }
+    }
+  }
+
+  // Ensure thumbnailData is included in gallery images
+  if (thumbnailData && !galleryImagesData.some((img) => img.url === thumbnailData!.url)) {
+    galleryImagesData.unshift({
+      key: thumbnailData.key || "external",
+      url: thumbnailData.url,
+      order: 0,
+    });
+    galleryImagesData.forEach((img, idx) => {
+      img.order = idx;
+    });
+  }
+
+  // If no explicit thumbnail was provided, make the first gallery image the thumbnail
+  if (!thumbnailData && galleryImagesData.length > 0) {
+    thumbnailData = {
+      key: galleryImagesData[0].key,
+      url: galleryImagesData[0].url,
+    };
   }
 
   // 6. Calculate Variants & Stock
@@ -317,7 +362,8 @@ const createProduct = async (
 
         // Media
         thumbnail: thumbnailData?.url || null,
-        thumbnailKey: thumbnailData?.key || null,
+        thumbnailKey:
+          thumbnailData?.key && thumbnailData.key !== "external" ? thumbnailData.key : null,
 
         // Flags
         hasVariants,
@@ -329,9 +375,9 @@ const createProduct = async (
         images: {
           create: galleryImagesData.map((img) => ({
             url: img.url,
-            key: img.key,
+            key: img.key || "external",
             order: img.order,
-            isThumbnail: thumbnailData?.key === img.key,
+            isThumbnail: Boolean(thumbnailData?.url && thumbnailData.url === img.url),
           })),
         },
 
@@ -611,18 +657,20 @@ const updateProduct = async (
   let thumbnail = existing.thumbnail;
   let thumbnailKey = existing.thumbnailKey;
 
-  if (payload.removeThumbnail && thumbnailKey) {
-    try {
-      await deletePrivateObject(thumbnailKey);
-    } catch {
-      // Non-blocking
+  if (payload.removeThumbnail) {
+    if (thumbnailKey && thumbnailKey !== "external") {
+      try {
+        await deletePrivateObject(thumbnailKey);
+      } catch {
+        // Non-blocking
+      }
     }
     thumbnail = null;
     thumbnailKey = null;
   }
 
   if (files?.thumbnail?.[0]) {
-    if (thumbnailKey) {
+    if (thumbnailKey && thumbnailKey !== "external") {
       try {
         await deletePrivateObject(thumbnailKey);
       } catch {
@@ -632,6 +680,9 @@ const updateProduct = async (
     const uploadedThumb = await uploadFileToR2(files.thumbnail[0], "thumb");
     thumbnail = uploadedThumb.url;
     thumbnailKey = uploadedThumb.key;
+  } else if (payload.thumbnailUrl !== undefined) {
+    thumbnail = payload.thumbnailUrl ? payload.thumbnailUrl.trim() : null;
+    thumbnailKey = null;
   }
 
   // 4. Handle Gallery Images Removal
@@ -640,7 +691,7 @@ const updateProduct = async (
       payload.removeImageIds!.includes(img.id),
     );
     for (const img of imagesToRemove) {
-      if (img.key) {
+      if (img.key && img.key !== "external") {
         try {
           await deletePrivateObject(img.key);
         } catch {
@@ -651,17 +702,51 @@ const updateProduct = async (
     }
   }
 
-  // 5. Handle New Gallery Images Upload
+  // 5. Handle New Gallery Images Upload & Image URLs
   const newGalleryImages: { key: string; url: string; order: number }[] = [];
+  const existingMaxOrder = existing.images.reduce((max, img) => Math.max(max, img.order), 0);
+
   if (files?.images && files.images.length > 0) {
-    const existingMaxOrder = existing.images.reduce((max, img) => Math.max(max, img.order), 0);
     for (let i = 0; i < files.images.length; i++) {
       const uploaded = await uploadFileToR2(files.images[i], `gal-${i + 1}`);
       newGalleryImages.push({
         ...uploaded,
-        order: existingMaxOrder + i + 1,
+        order: existingMaxOrder + newGalleryImages.length + 1,
       });
     }
+  }
+
+  let parsedUpdateImageUrls: string[] = [];
+  if (Array.isArray(payload.imageUrls)) {
+    parsedUpdateImageUrls = payload.imageUrls;
+  } else if (typeof payload.imageUrls === "string") {
+    try {
+      const parsed = JSON.parse(payload.imageUrls);
+      parsedUpdateImageUrls = Array.isArray(parsed) ? parsed : [parsed];
+    } catch {
+      parsedUpdateImageUrls = [payload.imageUrls];
+    }
+  }
+
+  if (parsedUpdateImageUrls.length > 0) {
+    for (const imgUrl of parsedUpdateImageUrls) {
+      const trimmed = typeof imgUrl === "string" ? imgUrl.trim() : "";
+      if (trimmed) {
+        const isDuplicate = existing.images.some((img) => img.url === trimmed);
+        if (!isDuplicate) {
+          newGalleryImages.push({
+            key: "external",
+            url: trimmed,
+            order: existingMaxOrder + newGalleryImages.length + 1,
+          });
+        }
+      }
+    }
+  }
+
+  if (!thumbnail && (newGalleryImages.length > 0 || existing.images.length > 0)) {
+    thumbnail = newGalleryImages[0]?.url || existing.images[0]?.url || null;
+    thumbnailKey = null;
   }
 
   // 6. Handle Variants & Stock

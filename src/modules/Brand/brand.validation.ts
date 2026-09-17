@@ -20,6 +20,7 @@ const createBrandValidationSchema = z.object({
     description: z.string().trim().max(500).optional(),
     isActive: optionalBoolean,
     isFeaturedMarquee: optionalBoolean,
+    imageUrl: optionalString,
   }),
 });
 
@@ -30,6 +31,7 @@ const updateBrandValidationSchema = z.object({
     description: z.string().trim().max(500).optional(),
     isActive: optionalBoolean,
     isFeaturedMarquee: optionalBoolean,
+    imageUrl: optionalString,
     removeImage: optionalBoolean,
   }),
 });

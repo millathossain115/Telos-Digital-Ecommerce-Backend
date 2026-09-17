@@ -1,0 +1,974 @@
+[
+  {
+    "id": "cat-smartphones",
+    "slug": "smartphones-tablets",
+    "name": "Smartphones & Tablets",
+    "description": "Latest 5G smartphones, flagship tablets, and cellular devices from Apple, Samsung, Xiaomi, and OnePlus.",
+    "icon": "Smartphone",
+    "itemCount": 12,
+    "featured": true,
+    "subcategories": [
+      {
+        "id": "sub-flagship-phones",
+        "name": "Flagship Phones",
+        "slug": "flagship-phones",
+        "itemCount": 3
+      },
+      {
+        "id": "sub-midrange-phones",
+        "name": "Budget & Mid-Range",
+        "slug": "midrange-phones",
+        "itemCount": 3
+      },
+      {
+        "id": "sub-tablets-ipads",
+        "name": "Tablets & iPads",
+        "slug": "tablets-ipads",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-mobile-chargers",
+        "name": "Chargers & Cables",
+        "slug": "chargers-cables",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-phone-cases",
+        "name": "Cases & Screen Guards",
+        "slug": "cases-screen-guards",
+        "itemCount": 2
+      }
+    ],
+    "image": "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    "id": "cat-laptops",
+    "slug": "laptops-macbooks",
+    "name": "Laptops & MacBooks",
+    "description": "High performance laptops for productivity, ultrabooks, creator workstations, and Apple Silicon MacBooks.",
+    "icon": "Laptop",
+    "itemCount": 11,
+    "featured": true,
+    "subcategories": [
+      {
+        "id": "sub-apple-macbook",
+        "name": "Apple MacBooks",
+        "slug": "apple-macbook",
+        "itemCount": 3
+      },
+      {
+        "id": "sub-ultrabooks",
+        "name": "Windows Ultrabooks",
+        "slug": "windows-ultrabooks",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-business-laptops",
+        "name": "Business & Workstations",
+        "slug": "business-workstations",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-laptop-accessories",
+        "name": "Laptop Bags & Sleeves",
+        "slug": "laptop-bags-sleeves",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-docking-stands",
+        "name": "Hubs & Laptop Stands",
+        "slug": "hubs-laptop-stands",
+        "itemCount": 2
+      }
+    ],
+    "image": "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    "id": "cat-gaming",
+    "slug": "gaming-gear-consoles",
+    "name": "Gaming Gear & Consoles",
+    "description": "Next-gen consoles, mechanical gaming keyboards, high DPI gaming mice, controllers, and battle station accessories.",
+    "icon": "Gamepad2",
+    "itemCount": 11,
+    "featured": true,
+    "subcategories": [
+      {
+        "id": "sub-consoles",
+        "name": "Gaming Consoles",
+        "slug": "gaming-consoles",
+        "itemCount": 3
+      },
+      {
+        "id": "sub-gaming-keyboards",
+        "name": "Mechanical Keyboards",
+        "slug": "mechanical-keyboards",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-gaming-mice",
+        "name": "Esports Gaming Mice",
+        "slug": "esports-gaming-mice",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-gamepads",
+        "name": "Controllers & Gamepads",
+        "slug": "controllers-gamepads",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-gaming-chairs",
+        "name": "Gaming Chairs & Desks",
+        "slug": "gaming-chairs-desks",
+        "itemCount": 2
+      }
+    ],
+    "image": "https://images.unsplash.com/photo-1606813907291-d86efa9b94db?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    "id": "cat-audio",
+    "slug": "audio-headphones",
+    "name": "Audio & Headphones",
+    "description": "Noise cancelling headphones, audiophile IEMs, true wireless earbuds, Bluetooth party speakers, and home soundbars.",
+    "icon": "Headphones",
+    "itemCount": 11,
+    "featured": true,
+    "subcategories": [
+      {
+        "id": "sub-over-ear",
+        "name": "Over-Ear Headphones",
+        "slug": "over-ear-headphones",
+        "itemCount": 3
+      },
+      {
+        "id": "sub-tws-earbuds",
+        "name": "TWS Earbuds",
+        "slug": "tws-earbuds",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-bt-speakers",
+        "name": "Bluetooth Speakers",
+        "slug": "bluetooth-speakers",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-soundbars",
+        "name": "Soundbars & Home Audio",
+        "slug": "soundbars-home-audio",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-audiophile-dacs",
+        "name": "DACs & Amplifiers",
+        "slug": "dacs-amplifiers",
+        "itemCount": 2
+      }
+    ],
+    "image": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    "id": "cat-wearables",
+    "slug": "smartwatches-wearables",
+    "name": "Smartwatches & Wearables",
+    "description": "Fitness trackers, cellular smartwatches, GPS multisport training watches, and smart smart-rings.",
+    "icon": "Watch",
+    "itemCount": 10,
+    "featured": true,
+    "subcategories": [
+      {
+        "id": "sub-smartwatches",
+        "name": "Premium Smartwatches",
+        "slug": "premium-smartwatches",
+        "itemCount": 3
+      },
+      {
+        "id": "sub-fitness-bands",
+        "name": "Fitness Trackers",
+        "slug": "fitness-trackers",
+        "itemCount": 3
+      },
+      {
+        "id": "sub-sports-gps",
+        "name": "GPS Running & Multisport",
+        "slug": "gps-running-multisport",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-watch-straps",
+        "name": "Straps & Protection",
+        "slug": "straps-protection",
+        "itemCount": 2
+      }
+    ],
+    "image": "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    "id": "cat-cameras",
+    "slug": "cameras-photography",
+    "name": "Cameras & Photography",
+    "description": "Mirrorless cinema cameras, creator vlogging cameras, prime lenses, gimbals, and studio lighting gear.",
+    "icon": "Camera",
+    "itemCount": 10,
+    "featured": true,
+    "subcategories": [
+      {
+        "id": "sub-mirrorless-cam",
+        "name": "Mirrorless Cameras",
+        "slug": "mirrorless-cameras",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-camera-lenses",
+        "name": "Camera Lenses",
+        "slug": "camera-lenses",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-action-drones",
+        "name": "Action Cams & Drones",
+        "slug": "action-cams-drones",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-gimbals-tripods",
+        "name": "Gimbals & Tripods",
+        "slug": "gimbals-tripods",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-studio-lights",
+        "name": "Studio Lighting & Mics",
+        "slug": "studio-lighting-mics",
+        "itemCount": 2
+      }
+    ],
+    "image": "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    "id": "cat-pc-components",
+    "slug": "pc-components-hardware",
+    "name": "PC Components & Hardware",
+    "description": "Custom desktop components including processors, graphics cards, motherboards, NVMe SSDs, and power supplies.",
+    "icon": "Cpu",
+    "itemCount": 10,
+    "featured": true,
+    "subcategories": [
+      {
+        "id": "sub-processors",
+        "name": "CPUs & Processors",
+        "slug": "cpus-processors",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-gpu-graphics",
+        "name": "Graphics Cards (GPU)",
+        "slug": "graphics-cards",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-motherboards",
+        "name": "Motherboards",
+        "slug": "motherboards",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-ram-memory",
+        "name": "RAM & Memory",
+        "slug": "ram-memory",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-nvme-storage",
+        "name": "SSDs & Hard Drives",
+        "slug": "ssds-hard-drives",
+        "itemCount": 1
+      },
+      {
+        "id": "sub-psu-cooling",
+        "name": "Power Supplies & Coolers",
+        "slug": "psu-cooling",
+        "itemCount": 1
+      }
+    ],
+    "image": "https://images.unsplash.com/photo-1587202372775-e229f172b9d7?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    "id": "cat-tv-home-theater",
+    "slug": "tv-home-entertainment",
+    "name": "TV & Home Entertainment",
+    "description": "4K OLED TVs, QLED displays, home cinema projectors, streaming devices, and surround sound gear.",
+    "icon": "Tv",
+    "itemCount": 10,
+    "featured": true,
+    "subcategories": [
+      {
+        "id": "sub-oled-tvs",
+        "name": "OLED & QLED Smart TVs",
+        "slug": "oled-qled-smart-tvs",
+        "itemCount": 3
+      },
+      {
+        "id": "sub-projectors",
+        "name": "4K Cinema Projectors",
+        "slug": "4k-cinema-projectors",
+        "itemCount": 3
+      },
+      {
+        "id": "sub-streaming-boxes",
+        "name": "Streaming Sticks & Boxes",
+        "slug": "streaming-sticks-boxes",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-tv-mounts",
+        "name": "Wall Mounts & Cables",
+        "slug": "wall-mounts-cables",
+        "itemCount": 2
+      }
+    ],
+    "image": "https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    "id": "cat-home-appliances",
+    "slug": "home-appliances",
+    "name": "Home Appliances",
+    "description": "Inverter air conditioners, smart refrigerators, robotic vacuums, microwave ovens, and air fryers.",
+    "icon": "Home",
+    "itemCount": 10,
+    "featured": false,
+    "subcategories": [
+      {
+        "id": "sub-kitchen-app",
+        "name": "Kitchen Appliances",
+        "slug": "kitchen-appliances",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-air-cooling",
+        "name": "AC & Air Purifiers",
+        "slug": "ac-air-purifiers",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-refrigerators",
+        "name": "Refrigerators & Freezers",
+        "slug": "refrigerators-freezers",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-washing-machines",
+        "name": "Washing Machines",
+        "slug": "washing-machines",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-vacuums",
+        "name": "Robotic & Handheld Vacuums",
+        "slug": "vacuums",
+        "itemCount": 2
+      }
+    ],
+    "image": "https://images.unsplash.com/photo-1558317374-067fb5f30001?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    "id": "cat-men-fashion",
+    "slug": "mens-fashion-apparel",
+    "name": "Men's Fashion & Apparel",
+    "description": "Premium cotton shirts, panjabis, slim-fit trousers, polo shirts, suits, and daily casuals.",
+    "icon": "Shirt",
+    "itemCount": 10,
+    "featured": false,
+    "subcategories": [
+      {
+        "id": "sub-panjabis",
+        "name": "Festive & Premium Panjabis",
+        "slug": "panjabis",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-mens-shirts",
+        "name": "Formal & Casual Shirts",
+        "slug": "mens-shirts",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-mens-polos",
+        "name": "Polo T-Shirts",
+        "slug": "polo-t-shirts",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-mens-trousers",
+        "name": "Jeans & Chinos",
+        "slug": "jeans-chinos",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-mens-blazers",
+        "name": "Blazers & Suits",
+        "slug": "blazers-suits",
+        "itemCount": 2
+      }
+    ],
+    "image": "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    "id": "cat-women-fashion",
+    "slug": "womens-fashion-ethnic-wear",
+    "name": "Women's Fashion & Ethnic Wear",
+    "description": "Designer sarees, salwar kameez, kurtis, abayas, tops, and evening luxury wear.",
+    "icon": "Sparkles",
+    "itemCount": 10,
+    "featured": false,
+    "subcategories": [
+      {
+        "id": "sub-sarees",
+        "name": "Silk & Muslin Sarees",
+        "slug": "sarees",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-salwar-kameez",
+        "name": "Salwar Kameez Sets",
+        "slug": "salwar-kameez",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-kurtis",
+        "name": "Designer Kurtis & Tunics",
+        "slug": "kurtis-tunics",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-abayas",
+        "name": "Modest Abayas & Hijabs",
+        "slug": "abayas-hijabs",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-western-tops",
+        "name": "Western Tops & Dresses",
+        "slug": "western-tops-dresses",
+        "itemCount": 2
+      }
+    ],
+    "image": "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    "id": "cat-footwear",
+    "slug": "footwear-shoes",
+    "name": "Footwear & Shoes",
+    "description": "Athletic sneakers, genuine leather oxford shoes, boots, loafers, sandals, and women's heels.",
+    "icon": "Footprints",
+    "itemCount": 10,
+    "featured": false,
+    "subcategories": [
+      {
+        "id": "sub-sneakers",
+        "name": "Running & Lifestyle Sneakers",
+        "slug": "sneakers",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-leather-shoes",
+        "name": "Formal Leather Shoes",
+        "slug": "formal-leather-shoes",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-boots",
+        "name": "Boots & High-Tops",
+        "slug": "boots-high-tops",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-sandals-slides",
+        "name": "Slides & Comfort Sandals",
+        "slug": "slides-sandals",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-heels-flats",
+        "name": "Heels & Ballerina Flats",
+        "slug": "heels-flats",
+        "itemCount": 2
+      }
+    ],
+    "image": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    "id": "cat-beauty-skincare",
+    "slug": "beauty-personal-care",
+    "name": "Beauty & Personal Care",
+    "description": "Korean skincare, dermatological serums, perfumes, hair care styling tools, and makeup.",
+    "icon": "Sparkle",
+    "itemCount": 10,
+    "featured": false,
+    "subcategories": [
+      {
+        "id": "sub-skincare-serums",
+        "name": "Face Serums & Toners",
+        "slug": "face-serums-toners",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-sunscreens",
+        "name": "Sunscreens & Moisturisers",
+        "slug": "sunscreens-moisturisers",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-perfumes",
+        "name": "Fragrances & Perfumes",
+        "slug": "fragrances-perfumes",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-hair-care",
+        "name": "Hair Dryers & Stylers",
+        "slug": "hair-dryers-stylers",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-makeup",
+        "name": "Cosmetics & Makeup",
+        "slug": "cosmetics-makeup",
+        "itemCount": 2
+      }
+    ],
+    "image": "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    "id": "cat-watches-jewelry",
+    "slug": "luxury-watches-jewelry",
+    "name": "Luxury Watches & Jewelry",
+    "description": "Automatic mechanical wristwatches, gold-plated jewelry, minimalist pendants, and gemstone rings.",
+    "icon": "Gem",
+    "itemCount": 10,
+    "featured": false,
+    "subcategories": [
+      {
+        "id": "sub-automatic-watches",
+        "name": "Automatic Mechanical Watches",
+        "slug": "automatic-mechanical-watches",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-chronograph-watches",
+        "name": "Chronograph Quartz Watches",
+        "slug": "chronograph-quartz-watches",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-necklaces-pendants",
+        "name": "Necklaces & Pendants",
+        "slug": "necklaces-pendants",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-bracelets-bangles",
+        "name": "Bracelets & Bangles",
+        "slug": "bracelets-bangles",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-rings",
+        "name": "Rings & Bands",
+        "slug": "rings-bands",
+        "itemCount": 2
+      }
+    ],
+    "image": "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    "id": "cat-smart-home",
+    "slug": "smart-home-security",
+    "name": "Smart Home & Security",
+    "description": "Wi-Fi security cameras, smart door locks, automated RGB smart lighting, and IoT hubs.",
+    "icon": "ShieldCheck",
+    "itemCount": 10,
+    "featured": false,
+    "subcategories": [
+      {
+        "id": "sub-cctv-cameras",
+        "name": "Security & IP Cameras",
+        "slug": "security-ip-cameras",
+        "itemCount": 3
+      },
+      {
+        "id": "sub-smart-locks",
+        "name": "Smart Door Locks",
+        "slug": "smart-door-locks",
+        "itemCount": 3
+      },
+      {
+        "id": "sub-smart-lighting",
+        "name": "Smart Bulbs & LED Strips",
+        "slug": "smart-bulbs-led-strips",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-smart-plugs",
+        "name": "Smart Plugs & Sensors",
+        "slug": "smart-plugs-sensors",
+        "itemCount": 2
+      }
+    ],
+    "image": "https://images.unsplash.com/photo-1558002038-1055907df827?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    "id": "cat-networking",
+    "slug": "networking-routers",
+    "name": "Networking & Routers",
+    "description": "Wi-Fi 7 / Wi-Fi 6 mesh routers, gigabit switches, 4G/5G LTE portable routers, and network storage NAS.",
+    "icon": "Wifi",
+    "itemCount": 10,
+    "featured": false,
+    "subcategories": [
+      {
+        "id": "sub-wifi-routers",
+        "name": "Wi-Fi 6 / 7 Gaming Routers",
+        "slug": "wifi-routers",
+        "itemCount": 3
+      },
+      {
+        "id": "sub-mesh-wifi",
+        "name": "Whole Home Mesh Systems",
+        "slug": "mesh-wifi-systems",
+        "itemCount": 3
+      },
+      {
+        "id": "sub-nas-storage",
+        "name": "Network Attached Storage (NAS)",
+        "slug": "nas-storage",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-switches-adapters",
+        "name": "Network Switches & LAN",
+        "slug": "switches-lan",
+        "itemCount": 2
+      }
+    ],
+    "image": "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    "id": "cat-office-productivity",
+    "slug": "office-electronics-printers",
+    "name": "Office Electronics & Printers",
+    "description": "Laser and ink-tank printers, document scanners, conference webcams, and paper shredders.",
+    "icon": "Printer",
+    "itemCount": 10,
+    "featured": false,
+    "subcategories": [
+      {
+        "id": "sub-printers",
+        "name": "EcoTank & Laser Printers",
+        "slug": "ecotank-laser-printers",
+        "itemCount": 3
+      },
+      {
+        "id": "sub-webcams",
+        "name": "4K Webcams & Conference Mics",
+        "slug": "webcams-conference-mics",
+        "itemCount": 3
+      },
+      {
+        "id": "sub-projectors-office",
+        "name": "Office Projectors",
+        "slug": "office-projectors",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-scanners",
+        "name": "High-Speed Document Scanners",
+        "slug": "document-scanners",
+        "itemCount": 2
+      }
+    ],
+    "image": "https://images.unsplash.com/photo-1612815154858-60aa4c59eaa6?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    "id": "cat-fitness-sports",
+    "slug": "fitness-gym-sports",
+    "name": "Fitness, Gym & Sports",
+    "description": "Adjustable dumbbells, yoga mats, resistance bands, protein shaker bottles, and indoor treadmills.",
+    "icon": "Dumbbell",
+    "itemCount": 10,
+    "featured": false,
+    "subcategories": [
+      {
+        "id": "sub-gym-weights",
+        "name": "Free Weights & Dumbbells",
+        "slug": "free-weights-dumbbells",
+        "itemCount": 3
+      },
+      {
+        "id": "sub-cardio-machines",
+        "name": "Treadmills & Exercise Bikes",
+        "slug": "treadmills-bikes",
+        "itemCount": 3
+      },
+      {
+        "id": "sub-yoga-recovery",
+        "name": "Yoga Mats & Foam Rollers",
+        "slug": "yoga-recovery",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-sports-gear",
+        "name": "Cricket, Football & Rackets",
+        "slug": "sports-gear",
+        "itemCount": 2
+      }
+    ],
+    "image": "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    "id": "cat-automotive-accessories",
+    "slug": "automotive-bike-accessories",
+    "name": "Automotive & Bike Accessories",
+    "description": "4K dashcams, cordless tire inflators, ceramic car coating, riding jackets, and helmets.",
+    "icon": "Car",
+    "itemCount": 10,
+    "featured": false,
+    "subcategories": [
+      {
+        "id": "sub-dash-cams",
+        "name": "Dash Cameras & GPS",
+        "slug": "dash-cams-gps",
+        "itemCount": 3
+      },
+      {
+        "id": "sub-car-care",
+        "name": "Car Wash, Polish & Wax",
+        "slug": "car-wash-polish",
+        "itemCount": 3
+      },
+      {
+        "id": "sub-tire-inflators",
+        "name": "Tire Inflators & Jumper Kits",
+        "slug": "tire-inflators-jumpers",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-biker-gear",
+        "name": "Motorcycle Helmets & Gloves",
+        "slug": "helmets-gloves",
+        "itemCount": 2
+      }
+    ],
+    "image": "https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    "id": "cat-books-stationery",
+    "slug": "books-stationery",
+    "name": "Books & Premium Stationery",
+    "description": "Bestselling books, fountain pens, leather journal notebooks, art supplies, and desk organizers.",
+    "icon": "BookOpen",
+    "itemCount": 10,
+    "featured": false,
+    "subcategories": [
+      {
+        "id": "sub-bestselling-books",
+        "name": "Bestselling Tech & Business",
+        "slug": "bestselling-books",
+        "itemCount": 3
+      },
+      {
+        "id": "sub-fountain-pens",
+        "name": "Luxury Fountain Pens",
+        "slug": "luxury-fountain-pens",
+        "itemCount": 3
+      },
+      {
+        "id": "sub-leather-journals",
+        "name": "Leather Journals & Planners",
+        "slug": "journals-planners",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-art-supplies",
+        "name": "Art Markers & Sketchbooks",
+        "slug": "art-markers-sketchbooks",
+        "itemCount": 2
+      }
+    ],
+    "image": "https://images.unsplash.com/photo-1583485088034-697b5bc54ccd?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    "id": "cat-travel-luggage",
+    "slug": "travel-luggage",
+    "name": "Travel & Luggage",
+    "description": "Polycarbonate hardside spinners, anti-theft backpacks, passport holders, and packing cubes.",
+    "icon": "Luggage",
+    "itemCount": 10,
+    "featured": false,
+    "subcategories": [
+      {
+        "id": "sub-hard-suitcases",
+        "name": "Hardside Spinner Suitcases",
+        "slug": "hardside-suitcases",
+        "itemCount": 3
+      },
+      {
+        "id": "sub-travel-backpacks",
+        "name": "Carry-on Travel Backpacks",
+        "slug": "travel-backpacks",
+        "itemCount": 3
+      },
+      {
+        "id": "sub-packing-cubes",
+        "name": "Organizers & Packing Cubes",
+        "slug": "packing-cubes",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-travel-pillows",
+        "name": "Memory Foam Travel Pillows",
+        "slug": "travel-pillows",
+        "itemCount": 2
+      }
+    ],
+    "image": "https://images.unsplash.com/photo-1565026057447-bc90a3dceb87?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    "id": "cat-kids-toys",
+    "slug": "baby-kids-toys",
+    "name": "Baby, Kids & Toys",
+    "description": "STEM educational robotic kits, LEGO building sets, baby strollers, and learning games.",
+    "icon": "Baby",
+    "itemCount": 10,
+    "featured": false,
+    "subcategories": [
+      {
+        "id": "sub-lego-building",
+        "name": "LEGO & Construction Kits",
+        "slug": "lego-construction",
+        "itemCount": 3
+      },
+      {
+        "id": "sub-stem-robotics",
+        "name": "STEM & Educational Toys",
+        "slug": "stem-educational-toys",
+        "itemCount": 3
+      },
+      {
+        "id": "sub-baby-gear",
+        "name": "Baby Strollers & Car Seats",
+        "slug": "baby-strollers-car-seats",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-board-games",
+        "name": "Board Games & Puzzles",
+        "slug": "board-games-puzzles",
+        "itemCount": 2
+      }
+    ],
+    "image": "https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    "id": "cat-eyewear-sunglasses",
+    "slug": "eyewear-sunglasses",
+    "name": "Eyewear & Sunglasses",
+    "description": "Polarized designer sunglasses, blue light blocking computer glasses, and titanium frames.",
+    "icon": "Glasses",
+    "itemCount": 10,
+    "featured": false,
+    "subcategories": [
+      {
+        "id": "sub-polarized-sun",
+        "name": "Polarized Sunglasses",
+        "slug": "polarized-sunglasses",
+        "itemCount": 3
+      },
+      {
+        "id": "sub-blue-light",
+        "name": "Blue Light Screen Glasses",
+        "slug": "blue-light-glasses",
+        "itemCount": 3
+      },
+      {
+        "id": "sub-optical-frames",
+        "name": "Titanium Optical Frames",
+        "slug": "optical-frames",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-sports-shades",
+        "name": "Sports & Cycling Eyewear",
+        "slug": "sports-sunglasses",
+        "itemCount": 2
+      }
+    ],
+    "image": "https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    "id": "cat-kitchen-dining",
+    "slug": "kitchen-dining-cookware",
+    "name": "Kitchen, Dining & Cookware",
+    "description": "Cast iron skillets, Japanese chef knives, non-stick granite cookware, and dining sets.",
+    "icon": "UtensilsCrossed",
+    "itemCount": 10,
+    "featured": false,
+    "subcategories": [
+      {
+        "id": "sub-cookware-sets",
+        "name": "Cookware Pots & Skillets",
+        "slug": "cookware-pots-skillets",
+        "itemCount": 3
+      },
+      {
+        "id": "sub-chef-knives",
+        "name": "Japanese Kitchen Knives",
+        "slug": "japanese-kitchen-knives",
+        "itemCount": 3
+      },
+      {
+        "id": "sub-dinnerware-glass",
+        "name": "Dinnerware & Glassware",
+        "slug": "dinnerware-glassware",
+        "itemCount": 2
+      },
+      {
+        "id": "sub-coffee-brewers",
+        "name": "Specialty Pour Over Coffee",
+        "slug": "specialty-pour-over-coffee",
+        "itemCount": 2
+      }
+    ],
+    "image": "https://images.unsplash.com/photo-1584990347449-a09c9586bc79?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    "id": "cat-pet-supplies",
+    "slug": "pet-supplies-care",
+    "name": "Pet Supplies & Care",
+    "description": "Automatic pet feeders, cat water fountains, premium pet food, grooming tools, and beds.",
+    "icon": "Dog",
+    "itemCount": 10,
+    "featured": false,
+    "subcategories": [
+      {
+        "id": "sub-cat-supplies",
+        "name": "Cat Food & Litter Care",
+        "slug": "cat-food-litter",
+        "itemCount": 4
+      },
+      {
+        "id": "sub-dog-gear",
+        "name": "Dog Harness, Beds & Food",
+        "slug": "dog-harness-beds",
+        "itemCount": 3
+      },
+      {
+        "id": "sub-smart-pet",
+        "name": "Smart Pet Feeders & Fountains",
+        "slug": "smart-pet-feeders",
+        "itemCount": 3
+      }
+    ],
+    "image": "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=800&q=80"
+  }
+]

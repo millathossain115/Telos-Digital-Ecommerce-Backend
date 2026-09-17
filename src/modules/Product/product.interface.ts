@@ -55,6 +55,10 @@ export type TCreateProductPayload = {
   hasVariants?: boolean;
   variants?: TProductVariantPayload[];
 
+  // Media URLs
+  thumbnailUrl?: string;
+  imageUrls?: string[];
+
   // Flags
   isFeatured?: boolean;
   isFlashDeal?: boolean;

@@ -75,6 +75,9 @@ model Customer {
   // E-commerce address relations
   addresses  CustomerAddress[]
 
+  // Reviews written by this customer
+  reviews    Review[]
+
   // Soft Delete Policy
   isDeleted  Boolean           @default(false)
   deletedAt  DateTime?
@@ -241,6 +244,13 @@ model Product {
   hasVariants           Boolean         @default(false)
   variants              ProductVariant[]
 
+  // Reviews
+  reviews               Review[]
+
+  // Ratings & Reviews (Denormalized aggregates — updated when Review model is added)
+  rating                Float           @default(0) // Average rating 0.0–5.0
+  reviewCount           Int             @default(0) // Total number of reviews
+
   // Flags & Visibility
   isFeatured            Boolean         @default(false)
   isFlashDeal           Boolean         @default(false)
@@ -305,4 +315,27 @@ model ProductVariant {
   @@map("product_variants")
 }
 
+// Review model - customer ratings and feedback for products
+model Review {
+  id                  String    @id @default(uuid())
+  productId           String
+  product             Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  customerId          String
+  customer            Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
+  rating              Int       // 1-5 stars
+  title               String?   // Optional review headline
+  comment             String?   // Full review text
+
+  isVerifiedPurchase  Boolean   @default(false) // Marked if customer purchased this product
+
+  isDeleted           Boolean   @default(false)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@unique([productId, customerId]) // One review per customer per product
+  @@index([productId])
+  @@index([customerId])
+  @@index([rating])
+  @@map("reviews")
+}

@@ -21,6 +21,7 @@ const createCategoryValidationSchema = z.object({
     subCategories: z.union([z.string(), z.array(z.any())]).optional(),
     isActive: optionalBoolean,
     isFeaturedHomepage: optionalBoolean,
+    imageUrl: optionalString,
   }),
 });
 
@@ -32,6 +33,7 @@ const updateCategoryValidationSchema = z.object({
     subCategories: z.union([z.string(), z.array(z.any())]).optional(),
     isActive: optionalBoolean,
     isFeaturedHomepage: optionalBoolean,
+    imageUrl: optionalString,
     removeImage: optionalBoolean,
   }),
 });

@@ -10,6 +10,7 @@ export type TCreateBrandPayload = {
   description?: string;
   isActive?: boolean;
   isFeaturedMarquee?: boolean;
+  imageUrl?: string;
 };
 
 export type TUpdateBrandPayload = Partial<TCreateBrandPayload> & {

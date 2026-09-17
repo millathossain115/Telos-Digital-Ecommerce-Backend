@@ -1,0 +1,82 @@
+[
+  {
+    "id": "brand-apple",
+    "name": "Apple",
+    "slug": "apple",
+    "tag": "Official Flagship",
+    "icon": "Apple",
+    "color": "#000000",
+    "featured": true,
+    "image": "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    "id": "brand-samsung",
+    "name": "Samsung",
+    "slug": "samsung",
+    "tag": "Authorized Hub",
+    "icon": "Samsung",
+    "color": "#1428A0",
+    "featured": true,
+    "image": "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    "id": "brand-google",
+    "name": "Google",
+    "slug": "google",
+    "tag": "Pixel Store",
+    "icon": "Google",
+    "color": "#4285F4",
+    "featured": true,
+    "image": "https://images.unsplash.com/photo-1572945753563-804956783604?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    "id": "brand-sony",
+    "name": "Sony",
+    "slug": "sony",
+    "tag": "Audio & Cinema",
+    "icon": "Sony",
+    "color": "#000000",
+    "featured": true,
+    "image": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    "id": "brand-oneplus",
+    "name": "OnePlus",
+    "slug": "oneplus",
+    "tag": "Official Outlet",
+    "icon": "OnePlus",
+    "color": "#EB0028",
+    "featured": true,
+    "image": "https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    "id": "brand-xiaomi",
+    "name": "Xiaomi",
+    "slug": "xiaomi",
+    "tag": "Smart Ecosystem",
+    "icon": "Xiaomi",
+    "color": "#FF6900",
+    "featured": true,
+    "image": "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    "id": "brand-asus",
+    "name": "Asus",
+    "slug": "asus",
+    "tag": "ROG & Zenbook",
+    "icon": "Asus",
+    "color": "#00539B",
+    "featured": true,
+    "image": "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    "id": "brand-anker",
+    "name": "Anker",
+    "slug": "anker",
+    "tag": "Power & Acoustics",
+    "icon": "Anker",
+    "color": "#00AEEF",
+    "featured": true,
+    "image": "https://images.unsplash.com/photo-1622445268048-261f95a28b9c?auto=format&fit=crop&w=600&q=80"
+  }
+]

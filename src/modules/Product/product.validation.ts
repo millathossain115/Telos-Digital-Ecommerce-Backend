@@ -78,6 +78,18 @@ const optionalRemoveImageIds = z.preprocess((value) => {
   return value;
 }, z.array(z.string()).optional());
 
+const optionalImageUrls = z.preprocess((value) => {
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : [parsed];
+    } catch {
+      return [value];
+    }
+  }
+  return value;
+}, z.array(z.string()).optional());
+
 const createProductValidationSchema = z.object({
   body: z.object({
     name: z.string({ required_error: "Product name is required" }).trim().min(2),
@@ -118,6 +130,10 @@ const createProductValidationSchema = z.object({
     // Variants
     hasVariants: optionalBoolean,
     variants: optionalVariants,
+
+    // Media URLs
+    thumbnailUrl: optionalString,
+    imageUrls: optionalImageUrls,
 
     // Flags
     isFeatured: optionalBoolean,
@@ -166,6 +182,10 @@ const updateProductValidationSchema = z.object({
     // Variants
     hasVariants: optionalBoolean,
     variants: optionalVariants,
+
+    // Media URLs
+    thumbnailUrl: optionalString,
+    imageUrls: optionalImageUrls,
 
     // Flags
     isFeatured: optionalBoolean,

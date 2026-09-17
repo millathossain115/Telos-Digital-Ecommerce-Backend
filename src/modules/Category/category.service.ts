@@ -99,7 +99,14 @@ const getPublicImageUrl = (key: string) => {
 const withDisplayImageUrl = async <T extends { imageKey: string | null; image: string | null }>(
   category: T,
 ) => {
-  if (!category.imageKey || config.r2.public_base_url) return category;
+  if (
+    !category.imageKey ||
+    category.imageKey === "external" ||
+    category.imageKey.startsWith("http") ||
+    config.r2.public_base_url
+  ) {
+    return category;
+  }
 
   return {
     ...category,
@@ -224,7 +231,7 @@ const createCategory = async (
   file?: Express.Multer.File,
   actorId?: string,
 ) => {
-  if (payload.isFeaturedHomepage && !file) {
+  if (payload.isFeaturedHomepage && !file && !payload.imageUrl) {
     throw new AppError(
       httpStatus.BAD_REQUEST,
       "Featured homepage categories require an image",
@@ -232,9 +239,19 @@ const createCategory = async (
   }
 
   const slug = await createUniqueCategorySlug(payload.name);
-  const imagePayload = file
-    ? await uploadCategoryImage(file, slug, actorId)
-    : { image: undefined, imageKey: undefined };
+  let imagePayload: { image?: string; imageKey?: string } = {
+    image: undefined,
+    imageKey: undefined,
+  };
+
+  if (file) {
+    imagePayload = await uploadCategoryImage(file, slug, actorId);
+  } else if (payload.imageUrl && payload.imageUrl.trim()) {
+    imagePayload = {
+      image: payload.imageUrl.trim(),
+      imageKey: "external",
+    };
+  }
   const subCategories = parseSubCategories(payload.subCategories);
 
   const category = await prisma.category.create({
@@ -397,7 +414,12 @@ const updateCategory = async (
     payload.isFeaturedHomepage ?? existing.isFeaturedHomepage;
   const willRemoveImage = payload.removeImage === true;
 
-  if (nextIsFeatured && !file && (willRemoveImage || !existing.image)) {
+  if (
+    nextIsFeatured &&
+    !file &&
+    !payload.imageUrl &&
+    (willRemoveImage || !existing.image)
+  ) {
     throw new AppError(
       httpStatus.BAD_REQUEST,
       "Featured homepage categories require an image",
@@ -407,9 +429,26 @@ const updateCategory = async (
   const nextSlug = payload.name
     ? await createUniqueCategorySlug(payload.name, id)
     : existing.slug;
-  const nextImagePayload = file
-    ? await uploadCategoryImage(file, nextSlug, actorId)
-    : undefined;
+
+  let nextImagePayload:
+    | { image: string | null; imageKey: string | null }
+    | undefined = undefined;
+
+  if (file) {
+    nextImagePayload = await uploadCategoryImage(file, nextSlug, actorId);
+  } else if (payload.imageUrl !== undefined) {
+    if (payload.imageUrl && payload.imageUrl.trim()) {
+      nextImagePayload = {
+        image: payload.imageUrl.trim(),
+        imageKey: "external",
+      };
+    } else {
+      nextImagePayload = {
+        image: null,
+        imageKey: null,
+      };
+    }
+  }
 
   await prisma.category.update({
     where: { id },
@@ -430,9 +469,10 @@ const updateCategory = async (
       ...(payload.isFeaturedHomepage !== undefined && {
         isFeaturedHomepage: payload.isFeaturedHomepage,
       }),
-      ...(nextImagePayload && nextImagePayload),
+      ...(nextImagePayload ? nextImagePayload : {}),
       ...(willRemoveImage &&
-        !file && {
+        !file &&
+        payload.imageUrl === undefined && {
           image: null,
           imageKey: null,
         }),
@@ -486,6 +526,8 @@ const updateCategory = async (
 
   const shouldDeleteOldImage =
     existing.imageKey &&
+    existing.imageKey !== "external" &&
+    !existing.imageKey.startsWith("http") &&
     ((nextImagePayload && nextImagePayload.imageKey !== existing.imageKey) ||
       willRemoveImage);
 

@@ -17,6 +17,7 @@ export type TCreateCategoryPayload = {
   subCategories?: TSubCategoryPayload[] | string;
   isActive?: boolean;
   isFeaturedHomepage?: boolean;
+  imageUrl?: string;
 };
 
 export type TUpdateCategoryPayload = Partial<TCreateCategoryPayload> & {
