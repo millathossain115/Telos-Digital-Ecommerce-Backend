@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { Prisma, UserStatus } from "@prisma/client";
 import httpStatus from "http-status";
 import AppError from "../../errors/AppError";
 import prisma from "../../lib/prisma";
@@ -39,6 +39,21 @@ const safeCustomerSelect = {
   updatedAt: true,
 };
 
+const customerAddressSelect = {
+  id: true,
+  title: true,
+  type: true,
+  isDefault: true,
+  street: true,
+  city: true,
+  area: true,
+  union: true,
+  zone: true,
+  state: true,
+  postalCode: true,
+  country: true,
+};
+
 const getAllCustomers = async (
   filters: TCustomerFilterRequest,
   paginationOptions?: IPaginationOptions,
@@ -49,15 +64,18 @@ const getAllCustomers = async (
 
   const andConditions: Prisma.CustomerWhereInput[] = [{ isDeleted: false }];
 
-  // Search filter
-  if (filters.searchTerm) {
-    const searchFilter = buildSearchFilter(
-      filters.searchTerm,
-      customerSearchableFields,
-    );
-    if (searchFilter) {
-      andConditions.push(searchFilter);
-    }
+  // Search filter across name, email, phone, customerId, or city
+  if (filters.searchTerm && filters.searchTerm.trim() !== "") {
+    const term = filters.searchTerm.trim();
+    andConditions.push({
+      OR: [
+        { name: { contains: term, mode: "insensitive" } },
+        { email: { contains: term, mode: "insensitive" } },
+        { phone: { contains: term, mode: "insensitive" } },
+        { customerId: { contains: term, mode: "insensitive" } },
+        { addresses: { some: { city: { contains: term, mode: "insensitive" } } } },
+      ],
+    });
   }
 
   // Exact status filter
@@ -88,14 +106,14 @@ const getAllCustomers = async (
       select: {
         ...safeCustomerSelect,
         addresses: {
+          select: customerAddressSelect,
+          orderBy: { isDefault: "desc" },
+        },
+        _count: {
           select: {
-            id: true,
-            title: true,
-            type: true,
-            isDefault: true,
-            city: true,
-            street: true,
-            country: true,
+            reviews: true,
+            cartItems: true,
+            wishlistItems: true,
           },
         },
       },
@@ -109,6 +127,30 @@ const getAllCustomers = async (
   };
 };
 
+const getCustomersSummaryAdmin = async () => {
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+  const [totalCustomers, activeCustomers, inactiveCustomers, suspendedCustomers, newThisMonth] =
+    await Promise.all([
+      prisma.customer.count({ where: { isDeleted: false } }),
+      prisma.customer.count({ where: { isDeleted: false, status: "ACTIVE" } }),
+      prisma.customer.count({ where: { isDeleted: false, status: "INACTIVE" } }),
+      prisma.customer.count({ where: { isDeleted: false, status: "SUSPENDED" } }),
+      prisma.customer.count({
+        where: { isDeleted: false, createdAt: { gte: thirtyDaysAgo } },
+      }),
+    ]);
+
+  return {
+    totalCustomers,
+    activeCustomers,
+    inactiveCustomers,
+    suspendedCustomers,
+    newThisMonth,
+  };
+};
+
 const getCustomerById = async (idOrCustomerId: string) => {
   const customer = await prisma.customer.findFirst({
     where: {
@@ -117,7 +159,17 @@ const getCustomerById = async (idOrCustomerId: string) => {
     },
     select: {
       ...safeCustomerSelect,
-      addresses: true,
+      addresses: {
+        select: customerAddressSelect,
+        orderBy: { isDefault: "desc" },
+      },
+      _count: {
+        select: {
+          reviews: true,
+          cartItems: true,
+          wishlistItems: true,
+        },
+      },
     },
   });
 
@@ -139,40 +191,79 @@ const updateCustomer = async (
     data: payload,
     select: {
       ...safeCustomerSelect,
-      addresses: true,
+      addresses: {
+        select: customerAddressSelect,
+      },
+      _count: {
+        select: {
+          reviews: true,
+          cartItems: true,
+          wishlistItems: true,
+        },
+      },
     },
   });
 
   return updated;
 };
 
-const deleteCustomer = async (idOrCustomerId: string) => {
+const updateCustomerStatus = async (
+  idOrCustomerId: string,
+  status: UserStatus,
+) => {
   const customer = await getCustomerById(idOrCustomerId);
 
-  const result = await prisma.customer.update({
+  const updated = await prisma.customer.update({
     where: { id: customer.id },
+    data: { status },
+    select: {
+      ...safeCustomerSelect,
+      addresses: {
+        select: customerAddressSelect,
+      },
+      _count: {
+        select: {
+          reviews: true,
+          cartItems: true,
+          wishlistItems: true,
+        },
+      },
+    },
+  });
+
+  return updated;
+};
+
+const deleteCustomer = async (id: string) => {
+  const customer = await prisma.customer.findFirst({
+    where: { id, isDeleted: false },
+  });
+
+  if (!customer) {
+    throw new AppError(
+      httpStatus.NOT_FOUND,
+      "Customer not found or already deleted",
+    );
+  }
+
+  const deleted = await prisma.customer.update({
+    where: { id },
     data: {
       isDeleted: true,
       deletedAt: new Date(),
-      status: "INACTIVE",
     },
     select: safeCustomerSelect,
   });
 
-  return result;
+  return deleted;
 };
 
-// ==================== CUSTOMER ADDRESSES ====================
+// ==================== ADDRESS SERVICE METHODS ====================
 
 const getMyAddresses = async (customerId: string) => {
-  await getCustomerById(customerId);
-
   const addresses = await prisma.customerAddress.findMany({
     where: { customerId },
-    orderBy: [
-      { isDefault: "desc" },
-      { createdAt: "desc" },
-    ],
+    orderBy: [{ isDefault: "desc" }, { createdAt: "desc" }],
   });
 
   return addresses;
@@ -182,16 +273,13 @@ const addAddress = async (
   customerId: string,
   payload: TCreateAddressPayload,
 ) => {
-  // Check customer exists
-  await getCustomerById(customerId);
-
-  const existingCount = await prisma.customerAddress.count({
+  const addressCount = await prisma.customerAddress.count({
     where: { customerId },
   });
 
-  const shouldBeDefault = existingCount === 0 || payload.isDefault === true;
+  const shouldBeDefault = payload.isDefault || addressCount === 0;
 
-  if (shouldBeDefault) {
+  if (shouldBeDefault && addressCount > 0) {
     await prisma.customerAddress.updateMany({
       where: { customerId },
       data: { isDefault: false },
@@ -201,8 +289,8 @@ const addAddress = async (
   const address = await prisma.customerAddress.create({
     data: {
       ...payload,
-      isDefault: shouldBeDefault,
       customerId,
+      isDefault: shouldBeDefault,
     },
   });
 
@@ -222,7 +310,7 @@ const updateAddress = async (
     throw new AppError(httpStatus.NOT_FOUND, "Address not found");
   }
 
-  if (payload.isDefault) {
+  if (payload.isDefault && !existing.isDefault) {
     await prisma.customerAddress.updateMany({
       where: { customerId },
       data: { isDefault: false },
@@ -291,8 +379,10 @@ const deleteAddress = async (customerId: string, addressId: string) => {
 
 export const CustomerService = {
   getAllCustomers,
+  getCustomersSummaryAdmin,
   getCustomerById,
   updateCustomer,
+  updateCustomerStatus,
   deleteCustomer,
   getMyAddresses,
   addAddress,

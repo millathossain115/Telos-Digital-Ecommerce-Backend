@@ -39,8 +39,23 @@ router.delete(
   CustomerController.deleteAddress,
 );
 
+// Admin: Customer KPI summary
+router.get(
+  "/admin/summary",
+  auth("SUPER_ADMIN"),
+  CustomerController.getCustomersSummaryAdmin,
+);
+
 // Admin: Get all customers with pagination & filters
 router.get("/", auth("SUPER_ADMIN"), CustomerController.getAllCustomers);
+
+// Admin: Update customer status (ACTIVE, INACTIVE, SUSPENDED)
+router.patch(
+  "/:id/status",
+  auth("SUPER_ADMIN"),
+  validateRequest(CustomerValidation.updateCustomerStatusValidationSchema),
+  CustomerController.updateCustomerStatus,
+);
 
 // View single customer profile (Self or Super Admin)
 router.get("/:id", auth(), CustomerController.getCustomerById);

@@ -14,6 +14,10 @@ export type TUpdateCustomerPayload = {
   status?: UserStatus;
 };
 
+export type TUpdateCustomerStatusPayload = {
+  status: UserStatus;
+};
+
 export type TCreateAddressPayload = {
   name?: string;
   phone?: string;

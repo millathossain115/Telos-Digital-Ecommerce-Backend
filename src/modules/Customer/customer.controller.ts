@@ -84,6 +84,30 @@ const deleteCustomer = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getCustomersSummaryAdmin = catchAsync(async (_req: Request, res: Response) => {
+  const result = await CustomerService.getCustomersSummaryAdmin();
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Customers summary retrieved successfully",
+    data: result,
+  });
+});
+
+const updateCustomerStatus = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { status } = req.body;
+  const result = await CustomerService.updateCustomerStatus(id, status);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Customer status updated successfully",
+    data: result,
+  });
+});
+
 // ==================== ADDRESS HANDLERS ====================
 
 const getMyAddresses = catchAsync(async (req: Request, res: Response) => {
@@ -155,8 +179,10 @@ const deleteAddress = catchAsync(async (req: Request, res: Response) => {
 
 export const CustomerController = {
   getAllCustomers,
+  getCustomersSummaryAdmin,
   getCustomerById,
   updateCustomer,
+  updateCustomerStatus,
   deleteCustomer,
   getMyAddresses,
   addAddress,

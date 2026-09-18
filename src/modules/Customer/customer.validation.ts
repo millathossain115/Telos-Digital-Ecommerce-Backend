@@ -9,6 +9,14 @@ const updateCustomerValidationSchema = z.object({
   }),
 });
 
+const updateCustomerStatusValidationSchema = z.object({
+  body: z.object({
+    status: z.enum(["ACTIVE", "INACTIVE", "SUSPENDED"], {
+      required_error: "Status is required (ACTIVE, INACTIVE, or SUSPENDED)",
+    }),
+  }),
+});
+
 const createAddressValidationSchema = z.object({
   body: z.object({
     name: z.string().optional(),
@@ -47,6 +55,7 @@ const updateAddressValidationSchema = z.object({
 
 export const CustomerValidation = {
   updateCustomerValidationSchema,
+  updateCustomerStatusValidationSchema,
   createAddressValidationSchema,
   updateAddressValidationSchema,
 };

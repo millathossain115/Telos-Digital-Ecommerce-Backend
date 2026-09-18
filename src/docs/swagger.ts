@@ -386,6 +386,46 @@ export const swaggerDocument = {
         },
       },
     },
+    "/customers/admin/summary": {
+      get: {
+        tags: ["Customers"],
+        summary: "Get customer counts and registration KPIs (Super Admin only)",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { description: "Customer summary metrics" },
+          403: { description: "Forbidden - Super Admin required" },
+        },
+      },
+    },
+    "/customers/{id}/status": {
+      patch: {
+        tags: ["Customers"],
+        summary: "Update customer status (ACTIVE, INACTIVE, SUSPENDED) (Super Admin only)",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "string" } },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["status"],
+                properties: {
+                  status: { type: "string", enum: ["ACTIVE", "INACTIVE", "SUSPENDED"] },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: "Customer status updated successfully" },
+          403: { description: "Forbidden - Super Admin required" },
+          404: { description: "Customer not found" },
+        },
+      },
+    },
     "/categories": {
       get: {
         tags: ["Categories"],
