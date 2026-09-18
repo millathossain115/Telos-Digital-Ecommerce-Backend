@@ -539,6 +539,32 @@ const getAllProductsAdmin = async (
   if (filters.stockStatus) {
     andConditions.push({ stockStatus: filters.stockStatus });
   }
+
+  // Stock quantity thresholds & presets
+  if (filters.stockFilter === "under_5" || filters.stockFilter === "under5") {
+    andConditions.push({ stock: { lte: 5 } });
+  } else if (filters.stockFilter === "under_10" || filters.stockFilter === "under10") {
+    andConditions.push({ stock: { lte: 10 } });
+  } else if (filters.stockFilter === "out_of_stock" || filters.stockFilter === "outOfStock") {
+    andConditions.push({ stock: { lte: 0 } });
+  } else if (filters.stockFilter === "in_stock" || filters.stockFilter === "inStock") {
+    andConditions.push({ stock: { gt: 0 } });
+  }
+
+  if (filters.maxStock !== undefined && filters.maxStock !== "") {
+    const maxVal = Number(filters.maxStock);
+    if (!isNaN(maxVal)) {
+      andConditions.push({ stock: { lte: maxVal } });
+    }
+  }
+
+  if (filters.minStock !== undefined && filters.minStock !== "") {
+    const minVal = Number(filters.minStock);
+    if (!isNaN(minVal)) {
+      andConditions.push({ stock: { gte: minVal } });
+    }
+  }
+
   if (filters.isFeatured !== undefined && filters.isFeatured !== "") {
     andConditions.push({ isFeatured: filters.isFeatured === true || filters.isFeatured === "true" });
   }
@@ -918,10 +944,30 @@ const deleteProduct = async (id: string) => {
   return withDisplayImageUrl(deleted);
 };
 
+// ==================== GET INVENTORY SUMMARY (ADMIN) ====================
+const getInventorySummary = async () => {
+  const [total, outOfStock, criticalLow, reserveLow, inStock] = await Promise.all([
+    prisma.product.count({ where: { isDeleted: false } }),
+    prisma.product.count({ where: { isDeleted: false, stock: { lte: 0 } } }),
+    prisma.product.count({ where: { isDeleted: false, stock: { gt: 0, lte: 5 } } }),
+    prisma.product.count({ where: { isDeleted: false, stock: { gt: 0, lte: 10 } } }),
+    prisma.product.count({ where: { isDeleted: false, stock: { gt: 10 } } }),
+  ]);
+
+  return {
+    total,
+    outOfStock,
+    criticalLow,
+    reserveLow,
+    inStock,
+  };
+};
+
 export const ProductService = {
   createProduct,
   getAllProducts,
   getAllProductsAdmin,
+  getInventorySummary,
   getProductBySlug,
   getProductById,
   updateProduct,

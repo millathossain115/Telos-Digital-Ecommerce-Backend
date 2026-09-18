@@ -20,6 +20,9 @@ export const productFilterableFields = [
   "isActive",
   "stockStatus",
   "hasVariants",
+  "stockFilter",
+  "minStock",
+  "maxStock",
 ];
 
 export const productSortableFields = [

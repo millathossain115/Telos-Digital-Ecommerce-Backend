@@ -79,6 +79,9 @@ const getAllProductsAdmin = catchAsync(async (req: Request, res: Response) => {
     isFeatured,
     isFlashDeal,
     stockStatus,
+    stockFilter,
+    minStock,
+    maxStock,
     page,
     limit,
     sortBy,
@@ -95,6 +98,9 @@ const getAllProductsAdmin = catchAsync(async (req: Request, res: Response) => {
       isFeatured: parseBooleanQuery(isFeatured),
       isFlashDeal: parseBooleanQuery(isFlashDeal),
       stockStatus: stockStatus as any,
+      stockFilter: stockFilter as string,
+      minStock: minStock as string,
+      maxStock: maxStock as string,
     },
     { page: page as string, limit: limit as string },
     { sortBy: sortBy as string, sortOrder: sortOrder as string },
@@ -161,10 +167,22 @@ const deleteProduct = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getInventorySummary = catchAsync(async (req: Request, res: Response) => {
+  const result = await ProductService.getInventorySummary();
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Inventory stock summary retrieved successfully",
+    data: result,
+  });
+});
+
 export const ProductController = {
   createProduct,
   getAllProducts,
   getAllProductsAdmin,
+  getInventorySummary,
   getProductBySlug,
   getProductById,
   updateProduct,

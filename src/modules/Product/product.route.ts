@@ -13,6 +13,11 @@ router.get("/slug/:slug", ProductController.getProductBySlug);
 
 // Super Admin catalog listing (includes drafts and inactive items)
 router.get("/admin", auth("SUPER_ADMIN"), ProductController.getAllProductsAdmin);
+router.get(
+  "/admin/inventory-summary",
+  auth("SUPER_ADMIN"),
+  ProductController.getInventorySummary,
+);
 
 // Create product (with multi-image upload & auto SKU)
 router.post(

@@ -84,4 +84,7 @@ export type TProductFilterRequest = {
   isActive?: string | boolean;
   stockStatus?: StockStatus;
   hasVariants?: string | boolean;
+  stockFilter?: string;
+  minStock?: string | number;
+  maxStock?: string | number;
 };

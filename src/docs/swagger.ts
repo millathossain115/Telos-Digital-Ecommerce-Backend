@@ -894,6 +894,9 @@ export const swaggerDocument = {
           { name: "brandId", in: "query", schema: { type: "string" } },
           { name: "isActive", in: "query", schema: { type: "boolean" } },
           { name: "stockStatus", in: "query", schema: { type: "string" } },
+          { name: "stockFilter", in: "query", schema: { type: "string", enum: ["under_5", "under_10", "out_of_stock", "in_stock"] } },
+          { name: "minStock", in: "query", schema: { type: "integer" } },
+          { name: "maxStock", in: "query", schema: { type: "integer" } },
           { name: "isFeatured", in: "query", schema: { type: "boolean" } },
           { name: "isFlashDeal", in: "query", schema: { type: "boolean" } },
           { name: "page", in: "query", schema: { type: "integer", default: 1 } },
@@ -997,6 +1000,66 @@ export const swaggerDocument = {
         responses: {
           200: { description: "Product deleted successfully" },
           404: { description: "Product not found" },
+        },
+      },
+    },
+    "/inventory/adjust": {
+      post: {
+        tags: ["Inventory"],
+        summary: "Adjust warehouse stock (+ / -) with reason and immutable audit log (Super Admin only)",
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["productId", "actionType", "quantity", "reason"],
+                properties: {
+                  productId: { type: "string" },
+                  actionType: { type: "string", enum: ["INCREASE", "DECREASE"] },
+                  quantity: { type: "integer", minimum: 1 },
+                  reason: { type: "string", example: "RESTOCK" },
+                  note: { type: "string" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: "Stock adjusted and audit log created" },
+          400: { description: "Validation error or insufficient stock" },
+          401: { description: "Unauthorized" },
+        },
+      },
+    },
+    "/inventory/audit-logs": {
+      get: {
+        tags: ["Inventory"],
+        summary: "List warehouse stock audit logs (Super Admin only)",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "searchTerm", in: "query", schema: { type: "string" } },
+          { name: "productId", in: "query", schema: { type: "string" } },
+          { name: "actionType", in: "query", schema: { type: "string", enum: ["INCREASE", "DECREASE"] } },
+          { name: "reason", in: "query", schema: { type: "string" } },
+          { name: "page", in: "query", schema: { type: "integer", default: 1 } },
+          { name: "limit", in: "query", schema: { type: "integer", default: 20 } },
+        ],
+        responses: {
+          200: { description: "Audit logs retrieved successfully" },
+          401: { description: "Unauthorized" },
+        },
+      },
+    },
+    "/inventory/audit-summary": {
+      get: {
+        tags: ["Inventory"],
+        summary: "Get stock audit statistics and net movement KPIs (Super Admin only)",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { description: "Audit KPI summary retrieved" },
+          401: { description: "Unauthorized" },
         },
       },
     },

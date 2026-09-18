@@ -38,6 +38,11 @@ enum StockStatus {
   LOW_STOCK
 }
 
+enum StockAdjustmentType {
+  INCREASE
+  DECREASE
+}
+
 // ==================== MODELS ====================
 
 // Admin model - back-office administrators for TelosCart
@@ -252,6 +257,7 @@ model Product {
   reviews               Review[]
   cartItems             CartItem[]
   wishlistItems         WishlistItem[]
+  auditLogs             StockAuditLog[]
 
   // Ratings & Reviews (Denormalized aggregates — updated when Review model is added)
   rating                Float           @default(0) // Average rating 0.0–5.0
@@ -383,3 +389,27 @@ model WishlistItem {
   @@index([productId])
   @@map("wishlist_items")
 }
+
+// StockAuditLog model - immutable audit trail for every warehouse stock modification (+ / -)
+model StockAuditLog {
+  id            String              @id @default(uuid())
+  productId     String
+  product       Product             @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  actionType    StockAdjustmentType // INCREASE | DECREASE
+  quantity      Int                 // Adjustment delta quantity (always positive int e.g. 5, 2)
+  previousStock Int                 // Stock balance before adjustment
+  newStock      Int                 // Stock balance after adjustment
+
+  reason        String              // Reason category e.g. "RESTOCK", "PURCHASE", "RETURN", "DAMAGED", "STOLEN", "EXPIRED", "CORRECTION", "CUSTOM"
+  note          String?             // Optional custom explanation or reference notes
+  performedBy   String?             // Admin name or ID who executed the adjustment
+
+  createdAt     DateTime            @default(now())
+
+  @@index([productId])
+  @@index([actionType])
+  @@index([createdAt])
+  @@map("stock_audit_logs")
+}
+
