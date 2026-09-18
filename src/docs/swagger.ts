@@ -1063,6 +1063,94 @@ export const swaggerDocument = {
         },
       },
     },
+    "/reviews/admin": {
+      get: {
+        tags: ["Reviews"],
+        summary: "List all customer reviews with filters and search (Super Admin only)",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "searchTerm", in: "query", schema: { type: "string" } },
+          { name: "status", in: "query", schema: { type: "string", enum: ["all", "PUBLISHED", "HIDDEN", "FLAGGED"] } },
+          { name: "rating", in: "query", schema: { type: "string" } },
+          { name: "isVisible", in: "query", schema: { type: "boolean" } },
+          { name: "page", in: "query", schema: { type: "integer", default: 1 } },
+          { name: "limit", in: "query", schema: { type: "integer", default: 20 } },
+          { name: "sortBy", in: "query", schema: { type: "string", enum: ["createdAt", "rating"] } },
+          { name: "sortOrder", in: "query", schema: { type: "string", enum: ["asc", "desc"] } },
+        ],
+        responses: {
+          200: { description: "Reviews list retrieved successfully" },
+          401: { description: "Unauthorized" },
+        },
+      },
+    },
+    "/reviews/admin/summary": {
+      get: {
+        tags: ["Reviews"],
+        summary: "Get customer reviews KPI metrics (Super Admin only)",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { description: "Review KPI summary retrieved" },
+          401: { description: "Unauthorized" },
+        },
+      },
+    },
+    "/reviews/admin/{id}/visibility": {
+      patch: {
+        tags: ["Reviews"],
+        summary: "Toggle review visibility or moderation status (Super Admin only)",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "string" } },
+        ],
+        requestBody: {
+          required: false,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  status: { type: "string", enum: ["PUBLISHED", "HIDDEN", "FLAGGED"] },
+                  isVisible: { type: "boolean" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: "Review visibility updated successfully" },
+          401: { description: "Unauthorized" },
+          404: { description: "Review not found" },
+        },
+      },
+    },
+    "/reviews/admin/{id}": {
+      delete: {
+        tags: ["Reviews"],
+        summary: "Soft delete customer review (Super Admin only)",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "string" } },
+        ],
+        responses: {
+          200: { description: "Review deleted successfully" },
+          401: { description: "Unauthorized" },
+          404: { description: "Review not found" },
+        },
+      },
+    },
+    "/reviews/product/{productId}": {
+      get: {
+        tags: ["Reviews"],
+        summary: "Get public approved reviews for a product",
+        parameters: [
+          { name: "productId", in: "path", required: true, schema: { type: "string" } },
+        ],
+        responses: {
+          200: { description: "Product reviews retrieved" },
+        },
+      },
+    },
   },
 };
 

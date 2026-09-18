@@ -43,6 +43,12 @@ enum StockAdjustmentType {
   DECREASE
 }
 
+enum ReviewStatus {
+  PUBLISHED
+  HIDDEN
+  FLAGGED
+}
+
 // ==================== MODELS ====================
 
 // Admin model - back-office administrators for TelosCart
@@ -341,16 +347,21 @@ model Review {
   title               String?   // Optional review headline
   comment             String?   // Full review text
 
-  isVerifiedPurchase  Boolean   @default(false) // Marked if customer purchased this product
+  isVerifiedPurchase  Boolean      @default(false) // Marked if customer purchased this product
 
-  isDeleted           Boolean   @default(false)
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
+  isVisible           Boolean      @default(true) // Storefront visibility
+  status              ReviewStatus @default(PUBLISHED) // Moderation status
+
+  isDeleted           Boolean      @default(false)
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
 
   @@unique([productId, customerId]) // One review per customer per product
   @@index([productId])
   @@index([customerId])
   @@index([rating])
+  @@index([status])
+  @@index([isVisible])
   @@map("reviews")
 }
 

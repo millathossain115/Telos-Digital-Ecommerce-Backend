@@ -13,6 +13,16 @@ const createReviewValidationSchema = z.object({
   }),
 });
 
+const updateReviewStatusValidationSchema = z.object({
+  body: z.object({
+    status: z
+      .enum(["PUBLISHED", "HIDDEN", "FLAGGED", "published", "hidden", "flagged"])
+      .optional(),
+    isVisible: z.boolean().optional(),
+  }),
+});
+
 export const ReviewValidation = {
   createReviewValidationSchema,
+  updateReviewStatusValidationSchema,
 };
