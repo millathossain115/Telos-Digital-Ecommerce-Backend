@@ -61,6 +61,19 @@ const productInclude = {
     where: { isDeleted: false },
     orderBy: { createdAt: "asc" as const },
   },
+  reviews: {
+    where: { isDeleted: false },
+    orderBy: { createdAt: "desc" as const },
+    include: {
+      customer: {
+        select: {
+          id: true,
+          name: true,
+          avatar: true,
+        },
+      },
+    },
+  },
 };
 
 const slugify = (value: string) =>

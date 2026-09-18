@@ -12,6 +12,7 @@ import { CartRoutes } from "../modules/Cart/cart.route";
 import { ProductRoutes } from "../modules/Product/product.route";
 import { UploadRoutes } from "../modules/Upload/upload.route";
 import { WishlistRoutes } from "../modules/Wishlist/wishlist.route";
+import { ReviewRoutes } from "../modules/Review/review.route";
 
 const router = Router();
 
@@ -73,6 +74,10 @@ const moduleRoutes = [
   {
     path: "/wishlist",
     route: WishlistRoutes,
+  },
+  {
+    path: "/reviews",
+    route: ReviewRoutes,
   },
 ];
 
