@@ -54,6 +54,11 @@ export const swaggerDocument = {
       description:
         "E-commerce product catalog, multi-image R2 gallery, badges, vouchers, SEO, and variants",
     },
+    {
+      name: "Orders",
+      description:
+        "Checkout, customer order history, dispatch tracking, and back-office order management",
+    },
   ],
 
   components: {
@@ -1188,6 +1193,116 @@ export const swaggerDocument = {
         ],
         responses: {
           200: { description: "Product reviews retrieved" },
+        },
+      },
+    },
+    "/orders": {
+      post: {
+        tags: ["Orders"],
+        summary: "Place new order (Customer or Guest checkout)",
+        responses: {
+          201: { description: "Order created successfully" },
+          400: { description: "Bad request" },
+        },
+      },
+      get: {
+        tags: ["Orders"],
+        summary: "List all orders with filters (Super Admin only)",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { description: "Orders retrieved successfully" },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden" },
+        },
+      },
+    },
+    "/orders/stats": {
+      get: {
+        tags: ["Orders"],
+        summary: "Get order metrics and fulfillment KPIs (Super Admin only)",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { description: "Order analytics summary retrieved" },
+          401: { description: "Unauthorized" },
+        },
+      },
+    },
+    "/orders/my": {
+      get: {
+        tags: ["Orders"],
+        summary: "Get authenticated customer's order history",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { description: "Customer orders retrieved" },
+          401: { description: "Unauthorized" },
+        },
+      },
+    },
+    "/orders/my/{id}": {
+      get: {
+        tags: ["Orders"],
+        summary: "Get single customer order details",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "string" } },
+        ],
+        responses: {
+          200: { description: "Order details retrieved" },
+          404: { description: "Order not found" },
+        },
+      },
+    },
+    "/orders/my/{id}/cancel": {
+      patch: {
+        tags: ["Orders"],
+        summary: "Customer cancel order (if still PENDING)",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "string" } },
+        ],
+        responses: {
+          200: { description: "Order cancelled" },
+          400: { description: "Cannot cancel order" },
+        },
+      },
+    },
+    "/orders/{id}": {
+      get: {
+        tags: ["Orders"],
+        summary: "Get order by ID or orderNumber (Super Admin only)",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "string" } },
+        ],
+        responses: {
+          200: { description: "Order retrieved successfully" },
+          404: { description: "Order not found" },
+        },
+      },
+    },
+    "/orders/{id}/status": {
+      patch: {
+        tags: ["Orders"],
+        summary: "Update order fulfillment status (Super Admin only)",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "string" } },
+        ],
+        responses: {
+          200: { description: "Order status updated" },
+        },
+      },
+    },
+    "/orders/{id}/courier": {
+      patch: {
+        tags: ["Orders"],
+        summary: "Assign courier tracking number (Super Admin only)",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "string" } },
+        ],
+        responses: {
+          200: { description: "Courier tracking assigned" },
         },
       },
     },

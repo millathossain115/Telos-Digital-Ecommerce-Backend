@@ -3,9 +3,9 @@ import httpStatus from "http-status";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import config from "../config";
 import AppError from "../errors/AppError";
+import { TAuthUser, TRole } from "../interface";
 import prisma from "../lib/prisma";
 import catchAsync from "../shared/catchAsync";
-import { TAuthUser, TRole } from "../interface";
 
 /**
  * Authentication & Role Authorization Middleware
@@ -111,6 +111,64 @@ const auth = (...requiredRoles: TRole[]) => {
         httpStatus.FORBIDDEN,
         "Forbidden: Access denied. Super Admin access required.",
       );
+    }
+
+    next();
+  });
+};
+
+export const optionalAuth = () => {
+  return catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return next();
+    }
+
+    const token = authHeader.startsWith("Bearer ")
+      ? authHeader.split(" ")[1]
+      : authHeader;
+
+    if (!token) {
+      return next();
+    }
+
+    try {
+      const decoded = jwt.verify(
+        token,
+        config.jwt.access_secret as string,
+      ) as JwtPayload & TAuthUser;
+
+      const { id, role } = decoded;
+
+      if (role === "CUSTOMER") {
+        const customer = await prisma.customer.findUnique({
+          where: { id },
+          select: { id: true, email: true, status: true, isDeleted: true },
+        });
+
+        if (customer && !customer.isDeleted && customer.status === "ACTIVE") {
+          req.user = {
+            id: customer.id,
+            email: customer.email,
+            role: "CUSTOMER",
+          };
+        }
+      } else if (role === "SUPER_ADMIN") {
+        const admin = await prisma.admin.findUnique({
+          where: { id },
+          select: { id: true, email: true, status: true, isDeleted: true },
+        });
+
+        if (admin && !admin.isDeleted && admin.status === "ACTIVE") {
+          req.user = {
+            id: admin.id,
+            email: admin.email,
+            role: "SUPER_ADMIN",
+          };
+        }
+      }
+    } catch {
+      // If invalid/expired token, proceed as guest without failing
     }
 
     next();

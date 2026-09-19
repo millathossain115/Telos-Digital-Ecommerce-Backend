@@ -98,8 +98,8 @@
 
 ### Module 9: Checkout & Orders (`/api/v1/orders`)
 
-- [ ] **Order & OrderItem Models**: `orderNumber` (e.g. `TC-ORD-2026-XXXX`), status, paymentStatus, total
-- [ ] **Checkout API**: Converts cart items into order, captures shipping address snapshot
-- [ ] **Inventory Decrement**: Atomic stock deduction on order placement
-- [ ] **Customer Order History**: View past orders and delivery tracking
-- [ ] **Admin Order Management**: Status transitions (`PENDING` -> `PROCESSING` -> `SHIPPED` -> `DELIVERED`)
+- [x] **Order, OrderItem, OrderCustomerDetails & OrderTransaction Models**: auto-generated `TC-XXXXX` order numbers, immutable product price/thumbnail/variant snapshotting, immutable recipient delivery details snapshotting, dynamic payment transactions
+- [x] **Checkout API**: `POST /api/v1/orders` converts cart/checkout into order, creates immutable snapshots
+- [x] **Inventory Decrement & Audit Log**: Atomic stock deduction on order placement with `StockAuditLog` recording
+- [x] **Customer Order History**: `GET /api/v1/orders/my`, `GET /api/v1/orders/my/:id`, and `PATCH /api/v1/orders/my/:id/cancel`
+- [x] **Admin Order Management**: `GET /api/v1/orders`, `GET /api/v1/orders/stats`, `GET /api/v1/orders/:id`, `PATCH /api/v1/orders/:id/status`, `PATCH /api/v1/orders/:id/courier`
