@@ -18,6 +18,7 @@ import { OrderRoutes } from "../modules/Order/order.route";
 import { ReportRoutes } from "../modules/Report/report.route";
 import { PaymentRoutes } from "../modules/Payment/payment.route";
 import { ActivityLogRoutes } from "../modules/ActivityLog/activityLog.route";
+import { DashboardRoutes } from "../modules/Dashboard/dashboard.route";
 
 const router = Router();
 
@@ -103,6 +104,10 @@ const moduleRoutes = [
   {
     path: "/activity-logs",
     route: ActivityLogRoutes,
+  },
+  {
+    path: "/dashboard",
+    route: DashboardRoutes,
   },
 ];
 
