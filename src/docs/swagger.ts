@@ -59,6 +59,16 @@ export const swaggerDocument = {
       description:
         "Checkout, customer order history, dispatch tracking, and back-office order management",
     },
+    {
+      name: "Reports",
+      description:
+        "Super Admin financial, stock, restock alerts, transaction, and sales analytical reports",
+    },
+    {
+      name: "Payments",
+      description:
+        "Super Admin payment transactions ledger, MFS number verification, and reconciliation",
+    },
   ],
 
   components: {
@@ -1303,6 +1313,200 @@ export const swaggerDocument = {
         ],
         responses: {
           200: { description: "Courier tracking assigned" },
+        },
+      },
+    },
+    "/reports/profit": {
+      post: {
+        tags: ["Reports"],
+        summary: "Generate profit and margins report (Super Admin only)",
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  dateRange: { type: "string", enum: ["today", "this_week", "last_week", "this_month", "last_month", "custom", "all_time"] },
+                  startDate: { type: "string" },
+                  endDate: { type: "string" },
+                  search: { type: "string" },
+                  page: { type: "integer", default: 1 },
+                  limit: { type: "integer", default: 12 },
+                  isExport: { type: "boolean", default: false },
+                  status: { type: "string" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: "Profit report generated successfully" },
+        },
+      },
+    },
+    "/reports/stock": {
+      post: {
+        tags: ["Reports"],
+        summary: "Generate inventory and stock valuation report (Super Admin only)",
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  dateRange: { type: "string", enum: ["today", "this_week", "last_week", "this_month", "last_month", "custom", "all_time"] },
+                  startDate: { type: "string" },
+                  endDate: { type: "string" },
+                  search: { type: "string" },
+                  page: { type: "integer", default: 1 },
+                  limit: { type: "integer", default: 12 },
+                  isExport: { type: "boolean", default: false },
+                  categoryId: { type: "string" },
+                  brandId: { type: "string" },
+                  stockStatus: { type: "string" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: "Stock report generated successfully" },
+        },
+      },
+    },
+    "/reports/low-stock": {
+      post: {
+        tags: ["Reports"],
+        summary: "Generate low-stock replenishment alert report (Super Admin only)",
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  dateRange: { type: "string", enum: ["today", "this_week", "last_week", "this_month", "last_month", "custom", "all_time"] },
+                  startDate: { type: "string" },
+                  endDate: { type: "string" },
+                  search: { type: "string" },
+                  page: { type: "integer", default: 1 },
+                  limit: { type: "integer", default: 12 },
+                  isExport: { type: "boolean", default: false },
+                  categoryId: { type: "string" },
+                  brandId: { type: "string" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: "Low-stock report generated successfully" },
+        },
+      },
+    },
+    "/reports/transactions": {
+      post: {
+        tags: ["Reports"],
+        summary: "Generate transaction payment audit report (Super Admin only)",
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  dateRange: { type: "string", enum: ["today", "this_week", "last_week", "this_month", "last_month", "custom", "all_time"] },
+                  startDate: { type: "string" },
+                  endDate: { type: "string" },
+                  search: { type: "string" },
+                  page: { type: "integer", default: 1 },
+                  limit: { type: "integer", default: 12 },
+                  isExport: { type: "boolean", default: false },
+                  paymentMethod: { type: "string" },
+                  status: { type: "string" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: "Transaction report generated successfully" },
+        },
+      },
+    },
+    "/reports/sales": {
+      post: {
+        tags: ["Reports"],
+        summary: "Generate sales performance report (Super Admin only)",
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  dateRange: { type: "string", enum: ["today", "this_week", "last_week", "this_month", "last_month", "custom", "all_time"] },
+                  startDate: { type: "string" },
+                  endDate: { type: "string" },
+                  search: { type: "string" },
+                  page: { type: "integer", default: 1 },
+                  limit: { type: "integer", default: 12 },
+                  isExport: { type: "boolean", default: false },
+                  status: { type: "string" },
+                  paymentMethod: { type: "string" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: "Sales report generated successfully" },
+        },
+      },
+    },
+    "/payments": {
+      get: {
+        tags: ["Payments"],
+        summary: "List all payment transactions with statistics and filters (Super Admin only)",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "page", in: "query", schema: { type: "integer", default: 1 } },
+          { name: "limit", in: "query", schema: { type: "integer", default: 8 } },
+          { name: "searchTerm", in: "query", schema: { type: "string" } },
+          { name: "status", in: "query", schema: { type: "string" } },
+          { name: "method", in: "query", schema: { type: "string" } },
+        ],
+        responses: {
+          200: { description: "Payment transactions retrieved successfully" },
+        },
+      },
+    },
+    "/payments/{id}/verify": {
+      patch: {
+        tags: ["Payments"],
+        summary: "Verify or reject a payment transaction (Super Admin only)",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "string" } },
+        ],
+        requestBody: {
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["status"],
+                properties: {
+                  status: { type: "string", enum: ["verified", "rejected", "pending", "settled"] },
+                  note: { type: "string" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: "Payment transaction verification status updated" },
         },
       },
     },
