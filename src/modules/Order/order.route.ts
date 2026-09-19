@@ -7,6 +7,19 @@ import { OrderValidation } from "./order.validation";
 const router = Router();
 
 // ==================== CUSTOMER & CHECKOUT ROUTES ====================
+// Pre-flight stock & status verification before order confirmation (Public, No Auth, ultra-fast)
+router.post(
+  "/validate-checkout",
+  validateRequest(OrderValidation.checkCheckoutStockValidationSchema),
+  OrderController.validateCheckoutStock,
+);
+
+router.post(
+  "/check-stock",
+  validateRequest(OrderValidation.checkCheckoutStockValidationSchema),
+  OrderController.validateCheckoutStock,
+);
+
 // Create order (Customer or Guest checkout)
 router.post(
   "/",

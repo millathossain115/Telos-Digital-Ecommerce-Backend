@@ -81,17 +81,18 @@ export const logActivity = async (
     let adminId = payload.adminId;
 
     // If request user exists and actor info was not fully provided, enrich from DB
-    if (req?.user) {
-      if (!adminId && req.user.role === "SUPER_ADMIN") {
-        adminId = req.user.id;
+    const reqUser = (req as any)?.user;
+    if (reqUser) {
+      if (!adminId && reqUser.role === "SUPER_ADMIN") {
+        adminId = reqUser.id;
       }
 
       if (!actorEmail) {
-        actorEmail = req.user.email;
+        actorEmail = reqUser.email;
       }
 
       if (!actorRole) {
-        actorRole = req.user.role === "SUPER_ADMIN" ? "System Administrator" : "Customer";
+        actorRole = reqUser.role === "SUPER_ADMIN" ? "System Administrator" : "Customer";
       }
 
       if (!actorName && adminId) {

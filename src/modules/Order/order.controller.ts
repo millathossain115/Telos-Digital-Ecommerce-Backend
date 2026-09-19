@@ -173,8 +173,23 @@ const getOrderStats = catchAsync(async (_req, res) => {
   });
 });
 
+const validateCheckoutStock = catchAsync(async (req, res) => {
+  const items = Array.isArray(req.body) ? req.body : req.body?.items || [];
+  const result = await OrderService.validateCheckoutStock(items);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: result.allValid
+      ? "All cart items are valid and in stock"
+      : "Some cart items are out of stock or unavailable",
+    data: result,
+  });
+});
+
 export const OrderController = {
   createOrder,
+  validateCheckoutStock,
   getMyOrders,
   getMyOrderById,
   cancelMyOrder,
@@ -185,3 +200,4 @@ export const OrderController = {
   updateOrderPayment,
   getOrderStats,
 };
+

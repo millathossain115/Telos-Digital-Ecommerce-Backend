@@ -16,6 +16,9 @@ import {
 } from "./order.constant";
 import {
   TAssignCourierPayload,
+  TCheckCheckoutStockItem,
+  TCheckCheckoutStockResponse,
+  TCheckStockIssue,
   TCreateOrderPayload,
   TOrderFilterRequest,
   TUpdateOrderPaymentPayload,
@@ -687,8 +690,168 @@ const getOrderStats = async () => {
   };
 };
 
+// ==================== VALIDATE CHECKOUT STOCK (PRE-FLIGHT CHECK) ====================
+const validateCheckoutStock = async (
+  items: TCheckCheckoutStockItem[],
+): Promise<TCheckCheckoutStockResponse> => {
+  if (!items || items.length === 0) {
+    return { allValid: true, issues: [] };
+  }
+
+  const productIds = Array.from(
+    new Set(items.map((i) => i.productId).filter((id): id is string => Boolean(id))),
+  );
+  const variantIds = Array.from(
+    new Set(items.map((i) => i.variantId).filter((v): v is string => Boolean(v))),
+  );
+
+  // High-speed direct DB query
+  const [products, variants] = await Promise.all([
+    prisma.product.findMany({
+      where: {
+        id: { in: productIds },
+      },
+      select: {
+        id: true,
+        name: true,
+        stock: true,
+        stockStatus: true,
+        isActive: true,
+        isDeleted: true,
+      },
+    }),
+    variantIds.length > 0
+      ? prisma.productVariant.findMany({
+          where: {
+            id: { in: variantIds },
+          },
+          select: {
+            id: true,
+            productId: true,
+            stock: true,
+            isDeleted: true,
+          },
+        })
+      : Promise.resolve([]),
+  ]);
+
+  const productMap = new Map(products.map((p) => [p.id, p]));
+  const variantMap = new Map(variants.map((v) => [v.id, v]));
+
+  const issues: TCheckStockIssue[] = [];
+
+  for (const item of items) {
+    const qty = Number(item.quantity) || 1;
+    const prod = productMap.get(item.productId);
+
+    // 1. Missing or Soft-Deleted Product
+    if (!prod || prod.isDeleted) {
+      issues.push({
+        productId: item.productId,
+        variantId: item.variantId || null,
+        productName: prod?.name || "Product Item",
+        requestedQuantity: qty,
+        availableStock: 0,
+        issueType: "NOT_FOUND",
+        message: `"${prod?.name || "This item"}" is no longer available in store.`,
+      });
+      continue;
+    }
+
+    // 2. Inactive / Deactivated Product
+    if (!prod.isActive) {
+      issues.push({
+        productId: item.productId,
+        variantId: item.variantId || null,
+        productName: prod.name,
+        requestedQuantity: qty,
+        availableStock: 0,
+        issueType: "INACTIVE",
+        message: `"${prod.name}" is currently unavailable or deactivated.`,
+      });
+      continue;
+    }
+
+    // 3. Variant Stock Verification (if applicable)
+    if (item.variantId) {
+      const variant = variantMap.get(item.variantId);
+      if (!variant || variant.isDeleted) {
+        issues.push({
+          productId: item.productId,
+          variantId: item.variantId,
+          productName: prod.name,
+          requestedQuantity: qty,
+          availableStock: 0,
+          issueType: "NOT_FOUND",
+          message: `The selected variant for "${prod.name}" is no longer available.`,
+        });
+        continue;
+      }
+
+      if (variant.stock <= 0) {
+        issues.push({
+          productId: item.productId,
+          variantId: item.variantId,
+          productName: prod.name,
+          requestedQuantity: qty,
+          availableStock: 0,
+          issueType: "OUT_OF_STOCK",
+          message: `The selected variant for "${prod.name}" is completely out of stock.`,
+        });
+        continue;
+      }
+
+      if (variant.stock < qty) {
+        issues.push({
+          productId: item.productId,
+          variantId: item.variantId,
+          productName: prod.name,
+          requestedQuantity: qty,
+          availableStock: variant.stock,
+          issueType: "INSUFFICIENT_STOCK",
+          message: `Only ${variant.stock} unit(s) available for "${prod.name}" (variant). You requested ${qty}.`,
+        });
+        continue;
+      }
+    }
+
+    // 4. Product General Stock Verification
+    if (prod.stock <= 0 || prod.stockStatus === StockStatus.OUT_OF_STOCK) {
+      issues.push({
+        productId: item.productId,
+        variantId: item.variantId || null,
+        productName: prod.name,
+        requestedQuantity: qty,
+        availableStock: 0,
+        issueType: "OUT_OF_STOCK",
+        message: `"${prod.name}" is out of stock.`,
+      });
+      continue;
+    }
+
+    if (prod.stock < qty) {
+      issues.push({
+        productId: item.productId,
+        variantId: item.variantId || null,
+        productName: prod.name,
+        requestedQuantity: qty,
+        availableStock: prod.stock,
+        issueType: "INSUFFICIENT_STOCK",
+        message: `Only ${prod.stock} unit(s) available for "${prod.name}". You requested ${qty}.`,
+      });
+      continue;
+    }
+  }
+
+  return {
+    allValid: issues.length === 0,
+    issues,
+  };
+};
+
 export const OrderService = {
   createOrder,
+  validateCheckoutStock,
   getMyOrders,
   getMyOrderById,
   cancelMyOrder,
@@ -699,3 +862,4 @@ export const OrderService = {
   updateOrderPayment,
   getOrderStats,
 };
+

@@ -67,3 +67,35 @@ export interface TOrderFilterRequest {
   startDate?: string;
   endDate?: string;
 }
+
+export interface TCheckCheckoutStockItem {
+  productId: string;
+  variantId?: string | null;
+  quantity?: number;
+}
+
+export interface TCheckCheckoutStockPayload {
+  items: TCheckCheckoutStockItem[];
+}
+
+export type TStockIssueType =
+  | "OUT_OF_STOCK"
+  | "INSUFFICIENT_STOCK"
+  | "INACTIVE"
+  | "NOT_FOUND";
+
+export interface TCheckStockIssue {
+  productId: string;
+  variantId?: string | null;
+  productName: string;
+  requestedQuantity: number;
+  availableStock: number;
+  issueType: TStockIssueType;
+  message: string;
+}
+
+export interface TCheckCheckoutStockResponse {
+  allValid: boolean;
+  issues: TCheckStockIssue[];
+}
+

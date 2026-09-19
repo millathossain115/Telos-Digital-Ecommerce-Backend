@@ -1211,6 +1211,79 @@ export const swaggerDocument = {
         },
       },
     },
+    "/orders/validate-checkout": {
+      post: {
+        tags: ["Orders"],
+        summary: "Pre-flight cart stock & status verification before order confirmation",
+        description:
+          "High-speed, unauthenticated check for all cart items. Verifies existence, active status, and real-time inventory in DB. Returns issues for items that are out-of-stock, inactive, or have insufficient stock.",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["items"],
+                properties: {
+                  items: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      required: ["productId"],
+                      properties: {
+                        productId: { type: "string" },
+                        variantId: { type: "string" },
+                        quantity: { type: "integer", default: 1 },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "Stock and active status verification result",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    success: { type: "boolean", example: true },
+                    message: { type: "string" },
+                    data: {
+                      type: "object",
+                      properties: {
+                        allValid: { type: "boolean", example: true },
+                        issues: {
+                          type: "array",
+                          items: {
+                            type: "object",
+                            properties: {
+                              productId: { type: "string" },
+                              variantId: { type: "string" },
+                              productName: { type: "string" },
+                              requestedQuantity: { type: "integer" },
+                              availableStock: { type: "integer" },
+                              issueType: {
+                                type: "string",
+                                enum: ["OUT_OF_STOCK", "INSUFFICIENT_STOCK", "INACTIVE", "NOT_FOUND"],
+                              },
+                              message: { type: "string" },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
     "/orders": {
       post: {
         tags: ["Orders"],

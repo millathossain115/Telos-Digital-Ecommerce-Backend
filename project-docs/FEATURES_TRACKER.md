@@ -100,6 +100,7 @@
 
 - [x] **Order, OrderItem, OrderCustomerDetails & OrderTransaction Models**: auto-generated `TC-XXXXX` order numbers, immutable product price/thumbnail/variant snapshotting, immutable recipient delivery details snapshotting, dynamic payment transactions
 - [x] **Checkout API**: `POST /api/v1/orders` converts cart/checkout into order, creates immutable snapshots
+- [x] **Pre-Flight Checkout Stock Validation**: Public unauthenticated `POST /api/v1/orders/validate-checkout` (and `/orders/check-stock`) verifying catalog items, stock balance, and active status before order confirmation; halts and purges unavailable items from cart
 - [x] **Inventory Decrement & Audit Log**: Atomic stock deduction on order placement with `StockAuditLog` recording
 - [x] **Customer Order History**: `GET /api/v1/orders/my`, `GET /api/v1/orders/my/:id`, and `PATCH /api/v1/orders/my/:id/cancel`
 - [x] **Admin Order Management**: `GET /api/v1/orders`, `GET /api/v1/orders/stats`, `GET /api/v1/orders/:id`, `PATCH /api/v1/orders/:id/status`, `PATCH /api/v1/orders/:id/courier`

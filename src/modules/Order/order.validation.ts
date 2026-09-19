@@ -76,10 +76,24 @@ const cancelMyOrderValidationSchema = z.object({
   }),
 });
 
+const checkStockItemSchema = z.object({
+  productId: z.string({ required_error: "Product ID is required" }),
+  variantId: z.string().optional().nullable(),
+  quantity: z.number().int().positive().optional().default(1),
+});
+
+const checkCheckoutStockValidationSchema = z.object({
+  body: z.object({
+    items: z.array(checkStockItemSchema).min(1, "At least one item is required for stock check"),
+  }),
+});
+
 export const OrderValidation = {
   createOrderValidationSchema,
   updateOrderStatusValidationSchema,
   assignCourierValidationSchema,
   updateOrderPaymentValidationSchema,
   cancelMyOrderValidationSchema,
+  checkCheckoutStockValidationSchema,
 };
+
