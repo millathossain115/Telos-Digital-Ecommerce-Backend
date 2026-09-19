@@ -30,6 +30,7 @@ import {
   TSubCategoryPayload,
   TUpdateCategoryPayload,
 } from "./category.interface";
+import { ActivityLogService } from "../ActivityLog/activityLog.service";
 
 const categoryInclude = {
   subCategories: {
@@ -284,7 +285,21 @@ const createCategory = async (
     ),
   );
 
-  return withDisplayImageUrl(await getCategoryByIdOrThrow(category.id));
+  const result = await withDisplayImageUrl(await getCategoryByIdOrThrow(category.id));
+
+  ActivityLogService.logActivity({
+    actorName: "Super Admin",
+    actorEmail: "admin@teloscart.website",
+    actorRole: "System Administrator",
+    action: "Created Category",
+    entity: result.name,
+    entityId: result.id,
+    category: "CATALOG",
+    severity: "SUCCESS",
+    details: `Created new category "${result.name}" with slug "${result.slug}" and ${subCategories.length} subcategory(s).`,
+  });
+
+  return result;
 };
 
 const getAllCategories = async (
@@ -535,13 +550,27 @@ const updateCategory = async (
     await deletePrivateObject(existing.imageKey).catch(() => undefined);
   }
 
-  return withDisplayImageUrl(await getCategoryByIdOrThrow(id));
+  const result = await withDisplayImageUrl(await getCategoryByIdOrThrow(id));
+
+  ActivityLogService.logActivity({
+    actorName: "Super Admin",
+    actorEmail: "admin@teloscart.website",
+    actorRole: "System Administrator",
+    action: "Updated Category",
+    entity: result.name,
+    entityId: result.id,
+    category: "CATALOG",
+    severity: "INFO",
+    details: `Updated taxonomy category "${result.name}" (slug: ${result.slug}).`,
+  });
+
+  return result;
 };
 
 const deleteCategory = async (id: string) => {
   await getCategoryByIdOrThrow(id);
 
-  return withDisplayImageUrl(await prisma.category.update({
+  const deleted = await prisma.category.update({
     where: { id },
     data: {
       isDeleted: true,
@@ -560,7 +589,23 @@ const deleteCategory = async (id: string) => {
       },
     },
     include: categoryInclude,
-  }));
+  });
+
+  const result = await withDisplayImageUrl(deleted);
+
+  ActivityLogService.logActivity({
+    actorName: "Super Admin",
+    actorEmail: "admin@teloscart.website",
+    actorRole: "System Administrator",
+    action: "Archived Category",
+    entity: result.name,
+    entityId: result.id,
+    category: "CATALOG",
+    severity: "WARNING",
+    details: `Archived category "${result.name}" and soft-deleted child subcategories.`,
+  });
+
+  return result;
 };
 
 const createSubCategory = async (

@@ -21,6 +21,7 @@ import {
   TUpdateOrderPaymentPayload,
   TUpdateOrderStatusPayload,
 } from "./order.interface";
+import { ActivityLogService } from "../ActivityLog/activityLog.service";
 
 // ==================== ORDER NUMBER GENERATOR ====================
 // Generates unique order number: TC-XXXXX (e.g. TC-94281)
@@ -85,7 +86,7 @@ const createOrder = async (
   const initialTrxStatus = isCOD ? "unpaid" : transaction?.trxId ? "verified" : "pending_verification";
 
   // Execute in Prisma Interactive Transaction
-  return await prisma.$transaction(async (tx) => {
+  const createdOrder = await prisma.$transaction(async (tx) => {
     // 1. Create Order master record
     const order = await tx.order.create({
       data: {
@@ -211,6 +212,20 @@ const createOrder = async (
       include: defaultOrderInclude,
     });
   });
+
+  ActivityLogService.logActivity({
+    actorName: customerDetails.name || "Customer",
+    actorEmail: customerDetails.email || authUser?.email || "customer@teloscart.website",
+    actorRole: authUser?.role === "CUSTOMER" ? "Customer" : "Guest Buyer",
+    action: "New Order Placed",
+    entity: `Order #${createdOrder.orderNumber}`,
+    entityId: createdOrder.orderNumber,
+    category: "ORDERS",
+    severity: "SUCCESS",
+    details: `Order #${createdOrder.orderNumber} placed for BDT ${Number(total).toLocaleString("en-BD", { minimumFractionDigits: 2 })} with ${items.length} item(s). Zone: ${customerDetails.zone}.`,
+  });
+
+  return createdOrder;
 };
 
 // ==================== GET MY ORDERS (CUSTOMER) ====================
@@ -507,7 +522,7 @@ const updateOrderStatus = async (
       }
     }
 
-    return await tx.order.update({
+    const updatedOrder = await tx.order.update({
       where: { id: order.id },
       data: {
         status: newStatus,
@@ -515,6 +530,20 @@ const updateOrderStatus = async (
       },
       include: defaultOrderInclude,
     });
+
+    ActivityLogService.logActivity({
+      actorName: adminUser?.name || "Super Admin",
+      actorEmail: adminUser?.email || "admin@teloscart.website",
+      actorRole: "System Administrator",
+      action: `Order Status ${newStatus}`,
+      entity: `Order #${order.orderNumber}`,
+      entityId: order.orderNumber,
+      category: "ORDERS",
+      severity: newStatus === OrderStatus.CANCELLED ? "DANGER" : "SUCCESS",
+      details: `Transitioned order status from ${previousStatus} to ${newStatus}.${payload.cancelReason ? ` Reason: ${payload.cancelReason}` : ""}`,
+    });
+
+    return updatedOrder;
   });
 };
 
@@ -537,7 +566,7 @@ const assignCourierTracking = async (
   const updatedStatus =
     order.status === OrderStatus.DELIVERED ? OrderStatus.DELIVERED : OrderStatus.SHIPPED;
 
-  return await prisma.order.update({
+  const updatedOrder = await prisma.order.update({
     where: { id: order.id },
     data: {
       courierName: payload.courierName,
@@ -547,6 +576,20 @@ const assignCourierTracking = async (
     },
     include: defaultOrderInclude,
   });
+
+  ActivityLogService.logActivity({
+    actorName: "Operations Lead",
+    actorEmail: "ops@teloscart.website",
+    actorRole: "Dispatcher",
+    action: "Order Status Dispatched",
+    entity: `Order #${order.orderNumber}`,
+    entityId: order.orderNumber,
+    category: "ORDERS",
+    severity: "SUCCESS",
+    details: `Assigned ${payload.courierName} tracking code ${payload.trackingNumber}. Estimated: ${payload.estimatedDelivery || order.estimatedDelivery || "Standard"}.`,
+  });
+
+  return updatedOrder;
 };
 
 // ==================== UPDATE ORDER PAYMENT (ADMIN) ====================
@@ -565,7 +608,7 @@ const updateOrderPayment = async (
     throw new AppError(httpStatus.NOT_FOUND, "Order not found");
   }
 
-  return await prisma.$transaction(async (tx) => {
+  const updatedOrder = await prisma.$transaction(async (tx) => {
     if (payload.paymentStatus) {
       await tx.order.update({
         where: { id: order.id },
@@ -590,6 +633,20 @@ const updateOrderPayment = async (
       include: defaultOrderInclude,
     });
   });
+
+  ActivityLogService.logActivity({
+    actorName: "Super Admin",
+    actorEmail: "admin@teloscart.website",
+    actorRole: "System Administrator",
+    action: "Updated Order Payment Status",
+    entity: `Order #${order.orderNumber}`,
+    entityId: order.orderNumber,
+    category: "PAYMENTS",
+    severity: payload.paymentStatus === PaymentStatus.PAID ? "SUCCESS" : "INFO",
+    details: `Payment status updated to ${payload.paymentStatus || "adjusted"} for order #${order.orderNumber}.`,
+  });
+
+  return updatedOrder;
 };
 
 // ==================== GET ORDER KPI SUMMARY (ADMIN) ====================

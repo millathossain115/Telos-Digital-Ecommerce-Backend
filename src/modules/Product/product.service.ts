@@ -29,6 +29,7 @@ import {
   TProductFilterRequest,
   TUpdateProductPayload,
 } from "./product.interface";
+import { ActivityLogService } from "../ActivityLog/activityLog.service";
 
 const productInclude = {
   category: {
@@ -427,7 +428,21 @@ const createProduct = async (
     return product;
   });
 
-  return withDisplayImageUrl(created);
+  const result = await withDisplayImageUrl(created);
+
+  ActivityLogService.logActivity({
+    actorName: "Super Admin",
+    actorEmail: "admin@teloscart.website",
+    actorRole: "System Administrator",
+    action: "Created Product",
+    entity: result.name,
+    entityId: result.id,
+    category: "CATALOG",
+    severity: "SUCCESS",
+    details: `Added new product "${result.name}" with SKU ${result.sku} priced at BDT ${Number(result.price).toLocaleString("en-BD", { minimumFractionDigits: 2 })}. Stock: ${result.stock} units.`,
+  });
+
+  return result;
 };
 
 // ==================== GET ALL PRODUCTS (PUBLIC) ====================
@@ -918,7 +933,21 @@ const updateProduct = async (
     return product;
   });
 
-  return withDisplayImageUrl(updated);
+  const result = await withDisplayImageUrl(updated);
+
+  ActivityLogService.logActivity({
+    actorName: "Super Admin",
+    actorEmail: "admin@teloscart.website",
+    actorRole: "System Administrator",
+    action: "Updated Product",
+    entity: result.name,
+    entityId: result.id,
+    category: "CATALOG",
+    severity: "INFO",
+    details: `Updated catalog item "${result.name}" (SKU: ${result.sku}). Current price: BDT ${Number(result.price).toLocaleString("en-BD", { minimumFractionDigits: 2 })}, Stock: ${result.stock} units.`,
+  });
+
+  return result;
 };
 
 // ==================== DELETE PRODUCT (SOFT DELETE) ====================
@@ -941,7 +970,21 @@ const deleteProduct = async (id: string) => {
     include: productInclude,
   });
 
-  return withDisplayImageUrl(deleted);
+  const result = await withDisplayImageUrl(deleted);
+
+  ActivityLogService.logActivity({
+    actorName: "Super Admin",
+    actorEmail: "admin@teloscart.website",
+    actorRole: "System Administrator",
+    action: "Archived Product",
+    entity: result.name,
+    entityId: result.id,
+    category: "CATALOG",
+    severity: "WARNING",
+    details: `Soft-deleted product "${result.name}" (SKU: ${result.sku}) and deactivated from storefront catalog.`,
+  });
+
+  return result;
 };
 
 // ==================== GET INVENTORY SUMMARY (ADMIN) ====================

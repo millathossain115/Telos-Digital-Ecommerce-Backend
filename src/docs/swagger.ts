@@ -69,6 +69,11 @@ export const swaggerDocument = {
       description:
         "Super Admin payment transactions ledger, MFS number verification, and reconciliation",
     },
+    {
+      name: "Activity Logs",
+      description:
+        "Super Admin immutable system activity, staff authentication, order dispatch, and security audit trail",
+    },
   ],
 
   components: {
@@ -1507,6 +1512,37 @@ export const swaggerDocument = {
         },
         responses: {
           200: { description: "Payment transaction verification status updated" },
+        },
+      },
+    },
+    "/activity-logs": {
+      get: {
+        tags: ["Activity Logs"],
+        summary: "Get paginated system activity and audit logs (Super Admin only)",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "searchTerm", in: "query", schema: { type: "string" }, description: "Keyword search across action, entity, details, actor, IP" },
+          { name: "category", in: "query", schema: { type: "string", enum: ["all", "auth", "catalog", "orders", "payments", "security", "settings"] } },
+          { name: "severity", in: "query", schema: { type: "string", enum: ["all", "info", "success", "warning", "danger"] } },
+          { name: "startDate", in: "query", schema: { type: "string", format: "date-time" } },
+          { name: "endDate", in: "query", schema: { type: "string", format: "date-time" } },
+          { name: "page", in: "query", schema: { type: "integer", default: 1 } },
+          { name: "limit", in: "query", schema: { type: "integer", default: 8 } },
+          { name: "sortBy", in: "query", schema: { type: "string", default: "createdAt" } },
+          { name: "sortOrder", in: "query", schema: { type: "string", enum: ["asc", "desc"], default: "desc" } },
+        ],
+        responses: {
+          200: { description: "Activity logs stream retrieved successfully" },
+        },
+      },
+    },
+    "/activity-logs/summary": {
+      get: {
+        tags: ["Activity Logs"],
+        summary: "Get activity log KPI summary metrics (Super Admin only)",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { description: "Activity summary counts (total, critical, security) retrieved successfully" },
         },
       },
     },

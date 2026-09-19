@@ -29,6 +29,7 @@ import {
   TCreateBrandPayload,
   TUpdateBrandPayload,
 } from "./brand.interface";
+import { ActivityLogService } from "../ActivityLog/activityLog.service";
 
 const slugify = (value: string) =>
   value
@@ -183,7 +184,21 @@ const createBrand = async (
     },
   });
 
-  return withDisplayImageUrl(await getBrandByIdOrThrow(brand.id));
+  const result = await withDisplayImageUrl(await getBrandByIdOrThrow(brand.id));
+
+  ActivityLogService.logActivity({
+    actorName: "Super Admin",
+    actorEmail: "admin@teloscart.website",
+    actorRole: "System Administrator",
+    action: "Published New Brand Partner",
+    entity: `Brand: ${result.name}`,
+    entityId: result.id,
+    category: "CATALOG",
+    severity: "SUCCESS",
+    details: `Registered brand partner "${result.name}" with slug "${result.slug}".${result.tagline ? ` Tagline: "${result.tagline}"` : ""}`,
+  });
+
+  return result;
 };
 
 const getAllBrands = async (
@@ -355,23 +370,51 @@ const updateBrand = async (
     await deletePrivateObject(existing.imageKey).catch(() => undefined);
   }
 
-  return withDisplayImageUrl(await getBrandByIdOrThrow(id));
+  const result = await withDisplayImageUrl(await getBrandByIdOrThrow(id));
+
+  ActivityLogService.logActivity({
+    actorName: "Super Admin",
+    actorEmail: "admin@teloscart.website",
+    actorRole: "System Administrator",
+    action: "Updated Brand Partner",
+    entity: `Brand: ${result.name}`,
+    entityId: result.id,
+    category: "CATALOG",
+    severity: "INFO",
+    details: `Updated brand metadata and assets for "${result.name}".`,
+  });
+
+  return result;
 };
 
 const deleteBrand = async (id: string) => {
   await getBrandByIdOrThrow(id);
 
-  return withDisplayImageUrl(
-    await prisma.brand.update({
-      where: { id },
-      data: {
-        isDeleted: true,
-        deletedAt: new Date(),
-        isActive: false,
-        isFeaturedMarquee: false,
-      },
-    }),
-  );
+  const deleted = await prisma.brand.update({
+    where: { id },
+    data: {
+      isDeleted: true,
+      deletedAt: new Date(),
+      isActive: false,
+      isFeaturedMarquee: false,
+    },
+  });
+
+  const result = await withDisplayImageUrl(deleted);
+
+  ActivityLogService.logActivity({
+    actorName: "Super Admin",
+    actorEmail: "admin@teloscart.website",
+    actorRole: "System Administrator",
+    action: "Archived Brand Partner",
+    entity: `Brand: ${result.name}`,
+    entityId: result.id,
+    category: "CATALOG",
+    severity: "WARNING",
+    details: `Archived brand "${result.name}" from active catalog and cleared marquee feature.`,
+  });
+
+  return result;
 };
 
 export const BrandService = {

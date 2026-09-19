@@ -12,6 +12,7 @@ import {
   IPaymentTransactionResponse,
   IVerifyTransactionPayload,
 } from "./payment.interface";
+import { ActivityLogService } from "../ActivityLog/activityLog.service";
 
 // Helper: Normalize payment method name for frontend UI
 const normalizeMethod = (
@@ -215,7 +216,7 @@ const verifyTransaction = async (
     return updatedTxn;
   });
 
-  return {
+  const result = {
     id: updated.id,
     orderId: updated.orderId,
     orderNumber: updated.order.orderNumber,
@@ -230,6 +231,30 @@ const verifyTransaction = async (
     status: normalizeStatus(updated.status),
     note: updated.note,
   };
+
+  ActivityLogService.logActivity({
+    actorName: "Finance Desk",
+    actorEmail: "billing@teloscart.website",
+    actorRole: "Accounts Auditor",
+    action:
+      payload.status === "verified"
+        ? `Verified ${result.method.toUpperCase()} Payment`
+        : payload.status === "rejected"
+          ? "Rejected Payment Transaction"
+          : "Updated Payment Status",
+    entity: result.trxId ? `Trx #${result.trxId}` : `Order #${result.orderNumber}`,
+    entityId: result.trxId || result.orderNumber,
+    category: "PAYMENTS",
+    severity:
+      payload.status === "verified"
+        ? "SUCCESS"
+        : payload.status === "rejected"
+          ? "DANGER"
+          : "WARNING",
+    details: `Reconciled BDT ${result.amount.toLocaleString("en-BD", { minimumFractionDigits: 2 })} against order #${result.orderNumber} with ${result.method.toUpperCase()} gateway.${payload.note ? ` Note: ${payload.note}` : ""}`,
+  });
+
+  return result;
 };
 
 export const PaymentService = {

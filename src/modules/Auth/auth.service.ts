@@ -14,6 +14,7 @@ import {
   TRefreshTokenResponse,
   TUpdateProfilePayload,
 } from "./auth.interface";
+import { ActivityLogService } from "../ActivityLog/activityLog.service";
 
 // Helper to generate unique Customer ID (e.g. TC-2026-1042)
 const generateCustomerId = async (): Promise<string> => {
@@ -255,6 +256,16 @@ const loginAdmin = async (payload: TLoginPayload): Promise<TAuthResponse> => {
   );
 
   if (!isPasswordMatched) {
+    ActivityLogService.logActivity({
+      actorName: "Security Sentinel",
+      actorEmail: normalizedEmail,
+      actorRole: "Automated System",
+      action: "Blocked Suspicious Login Attempt",
+      entity: "Admin Login Portal",
+      category: "AUTH",
+      severity: "DANGER",
+      details: `Detected failed password attempt targeting admin account ${normalizedEmail}.`,
+    });
     throw new AppError(httpStatus.UNAUTHORIZED, "Invalid email or password");
   }
 
@@ -262,6 +273,19 @@ const loginAdmin = async (payload: TLoginPayload): Promise<TAuthResponse> => {
     id: admin.id,
     email: admin.email,
     role: "SUPER_ADMIN",
+  });
+
+  ActivityLogService.logActivity({
+    adminId: admin.id,
+    actorName: admin.name,
+    actorEmail: admin.email,
+    actorRole: "System Administrator",
+    action: "Admin Login Successful",
+    entity: "Admin Portal",
+    entityId: admin.id,
+    category: "AUTH",
+    severity: "SUCCESS",
+    details: `Administrator ${admin.name} (${admin.email}) logged in to management dashboard.`,
   });
 
   return {
@@ -465,6 +489,19 @@ const changePassword = async (
     await prisma.admin.update({
       where: { id: userId },
       data: { password: newHash },
+    });
+
+    ActivityLogService.logActivity({
+      adminId: admin.id,
+      actorName: admin.name,
+      actorEmail: admin.email,
+      actorRole: "System Administrator",
+      action: "Admin Profile Password Rotated",
+      entity: admin.email,
+      entityId: admin.id,
+      category: "AUTH",
+      severity: "WARNING",
+      details: `Administrator account credentials for ${admin.email} updated successfully.`,
     });
 
     return { message: "Password updated successfully" };

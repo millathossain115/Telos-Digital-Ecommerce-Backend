@@ -64,6 +64,22 @@ enum PaymentStatus {
   REFUNDED
 }
 
+enum ActivitySeverity {
+  INFO
+  SUCCESS
+  WARNING
+  DANGER
+}
+
+enum ActivityCategory {
+  AUTH
+  CATALOG
+  ORDERS
+  PAYMENTS
+  SECURITY
+  SETTINGS
+}
+
 // ==================== MODELS ====================
 
 // Admin model - back-office administrators for TelosCart
@@ -76,6 +92,9 @@ model Admin {
   phone     String?
   avatar    String?
   status    UserStatus @default(ACTIVE)
+
+  // Relations
+  activityLogs ActivityLog[]
 
   // Soft Delete Policy
   isDeleted Boolean    @default(false)
@@ -555,4 +574,44 @@ model OrderTransaction {
   @@index([trxId])
   @@map("order_transactions")
 }
+
+// ActivityLog model - system audit trail for administrative operations and store transparency
+model ActivityLog {
+  id          String           @id @default(uuid())
+  timestamp   DateTime         @default(now())
+
+  // Actor Information
+  adminId     String?
+  admin       Admin?           @relation(fields: [adminId], references: [id], onDelete: SetNull)
+  actorName   String
+  actorEmail  String
+  actorRole   String
+  actorAvatar String?
+
+  // Action Details
+  action      String           // e.g. "Updated Category", "Order Status Dispatched", "Verified bKash Payment"
+  entity      String           // e.g. "Smartphones & Foldables", "Order #TC-94281", "Trx #9M48L912K"
+  entityId    String?          // Optional ID or business code
+  category    ActivityCategory @default(CATALOG)
+  severity    ActivitySeverity @default(INFO)
+  details     String           @db.Text // Human-readable audit narrative
+
+  // Device & Network Origin
+  ipAddress   String?          @default("127.0.0.1")
+  device      String?          @default("Chrome / Windows 11")
+  location    String?          @default("Dhaka, Bangladesh")
+
+  // Optional Metadata (diffs, snapshots)
+  metadata    Json?
+
+  createdAt   DateTime         @default(now())
+
+  @@index([category])
+  @@index([severity])
+  @@index([createdAt])
+  @@index([adminId])
+  @@index([entityId])
+  @@map("activity_logs")
+}
+
 

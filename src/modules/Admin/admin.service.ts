@@ -21,6 +21,7 @@ import {
   TCreateAdminPayload,
   TUpdateAdminPayload,
 } from "./admin.interface";
+import { ActivityLogService } from "../ActivityLog/activityLog.service";
 
 const safeAdminSelect = {
   id: true,
@@ -68,6 +69,18 @@ const createAdmin = async (payload: TCreateAdminPayload) => {
       isDeleted: false,
     },
     select: safeAdminSelect,
+  });
+
+  ActivityLogService.logActivity({
+    actorName: "Super Admin",
+    actorEmail: "admin@teloscart.website",
+    actorRole: "System Administrator",
+    action: "Created Admin Account",
+    entity: admin.email,
+    entityId: admin.id,
+    category: "SECURITY",
+    severity: "WARNING",
+    details: `Created new administrator profile for ${admin.name} (${admin.email}) with role SUPER_ADMIN.`,
   });
 
   return admin;
@@ -159,6 +172,18 @@ const updateAdmin = async (id: string, payload: TUpdateAdminPayload) => {
     select: safeAdminSelect,
   });
 
+  ActivityLogService.logActivity({
+    actorName: "Super Admin",
+    actorEmail: "admin@teloscart.website",
+    actorRole: "System Administrator",
+    action: "Updated Admin Account",
+    entity: result.email,
+    entityId: result.id,
+    category: "SECURITY",
+    severity: "INFO",
+    details: `Updated administrative profile for ${result.name} (${result.email}).`,
+  });
+
   return result;
 };
 
@@ -180,6 +205,18 @@ const deleteAdmin = async (id: string, currentAdminId?: string) => {
       status: "INACTIVE",
     },
     select: safeAdminSelect,
+  });
+
+  ActivityLogService.logActivity({
+    actorName: "Super Admin",
+    actorEmail: "admin@teloscart.website",
+    actorRole: "System Administrator",
+    action: "Archived Admin Account",
+    entity: result.email,
+    entityId: result.id,
+    category: "SECURITY",
+    severity: "DANGER",
+    details: `Soft-deleted administrator ${result.name} (${result.email}) and revoked access.`,
   });
 
   return result;

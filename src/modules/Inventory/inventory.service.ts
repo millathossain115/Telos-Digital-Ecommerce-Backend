@@ -20,6 +20,7 @@ import {
   TInventoryAuditFilterRequest,
   TStockAdjustmentPayload,
 } from "./inventory.interface";
+import { ActivityLogService } from "../ActivityLog/activityLog.service";
 
 // ==================== ADJUST PRODUCT STOCK ====================
 const adjustStock = async (
@@ -103,6 +104,21 @@ const adjustStock = async (
           },
         },
       },
+    });
+
+    ActivityLogService.logActivity({
+      actorName: adminUser?.name || "Inventory Manager",
+      actorEmail: adminUser?.email || "warehouse@teloscart.website",
+      actorRole: "Stock Controller",
+      action:
+        payload.actionType === "INCREASE"
+          ? "Stock Inward Adjustment"
+          : "Stock Outward Adjustment",
+      entity: product.name,
+      entityId: product.id,
+      category: "CATALOG",
+      severity: payload.actionType === "INCREASE" ? "INFO" : "WARNING",
+      details: `${payload.actionType === "INCREASE" ? "Restocked" : "Deducted"} ${payload.quantity} unit(s) for "${product.name}" (previous: ${currentStock}, new balance: ${newStock}). Reason: ${payload.reason}.${payload.note ? ` Note: ${payload.note}` : ""}`,
     });
 
     return {

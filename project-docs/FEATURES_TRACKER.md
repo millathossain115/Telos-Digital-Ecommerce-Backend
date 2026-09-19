@@ -103,3 +103,13 @@
 - [x] **Inventory Decrement & Audit Log**: Atomic stock deduction on order placement with `StockAuditLog` recording
 - [x] **Customer Order History**: `GET /api/v1/orders/my`, `GET /api/v1/orders/my/:id`, and `PATCH /api/v1/orders/my/:id/cancel`
 - [x] **Admin Order Management**: `GET /api/v1/orders`, `GET /api/v1/orders/stats`, `GET /api/v1/orders/:id`, `PATCH /api/v1/orders/:id/status`, `PATCH /api/v1/orders/:id/courier`
+
+### Module 10: System Activity & Audit Logs (`/api/v1/activity-logs`)
+
+- [x] **ActivityLog Model & Enums**: `activity_logs` table with `ActivityCategory` and `ActivitySeverity` enums, actor snapshots, IP, device, and location
+- [x] **Universal Audit Logging Service**: Centralized non-blocking `ActivityLogService.logActivity` hook capturing operational changes
+- [x] **System-Wide Instrumentation**: Auto-logging across Admin Auth, Order lifecycle, Courier dispatch, Payment verification, Stock adjustments, Catalog taxonomy, and Staff management
+- [x] **Super Admin API Endpoints**: `GET /api/v1/activity-logs` (paginated stream with keyword search, category, severity, and date range filters) and `GET /api/v1/activity-logs/summary` (KPI counters)
+- [x] **Interactive Swagger UI**: Documented under tag `Activity Logs` with full query parameters and schemas
+- [x] **Frontend Admin Portal**: Connected `http://localhost:3000/dashboard/activity` via RTK Query `activityApi` while preserving 100% of the polished UI, tables, badges, filter dock, and KPI strip
+

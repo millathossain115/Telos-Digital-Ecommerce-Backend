@@ -17,6 +17,7 @@ import { InventoryRoutes } from "../modules/Inventory/inventory.route";
 import { OrderRoutes } from "../modules/Order/order.route";
 import { ReportRoutes } from "../modules/Report/report.route";
 import { PaymentRoutes } from "../modules/Payment/payment.route";
+import { ActivityLogRoutes } from "../modules/ActivityLog/activityLog.route";
 
 const router = Router();
 
@@ -98,6 +99,10 @@ const moduleRoutes = [
   {
     path: "/payments",
     route: PaymentRoutes,
+  },
+  {
+    path: "/activity-logs",
+    route: ActivityLogRoutes,
   },
 ];
 
