@@ -135,13 +135,25 @@ const uploadBrandImage = async (
 const getBrandByIdOrThrow = async (id: string) => {
   const brand = await prisma.brand.findFirst({
     where: { id, isDeleted: false },
+    include: {
+      _count: {
+        select: {
+          products: {
+            where: { isDeleted: false },
+          },
+        },
+      },
+    },
   });
 
   if (!brand) {
     throw new AppError(httpStatus.NOT_FOUND, "Brand not found");
   }
 
-  return brand;
+  return {
+    ...brand,
+    itemCount: brand._count?.products ?? 0,
+  };
 };
 
 const createBrand = async (
@@ -240,13 +252,27 @@ const getAllBrands = async (
       skip,
       take: limit,
       orderBy,
+      include: {
+        _count: {
+          select: {
+            products: {
+              where: { isDeleted: false },
+            },
+          },
+        },
+      },
     }),
     prisma.brand.count({ where: whereConditions }),
   ]);
 
+  const transformedBrands = brands.map((b) => ({
+    ...b,
+    itemCount: b._count?.products ?? 0,
+  }));
+
   return {
     meta: buildPaginationMeta(page, limit, total),
-    data: await withDisplayImageUrls(brands),
+    data: await withDisplayImageUrls(transformedBrands),
   };
 };
 
@@ -270,13 +296,25 @@ const getBrandBySlug = async (slug: string) => {
       isDeleted: false,
       isActive: true,
     },
+    include: {
+      _count: {
+        select: {
+          products: {
+            where: { isDeleted: false },
+          },
+        },
+      },
+    },
   });
 
   if (!brand) {
     throw new AppError(httpStatus.NOT_FOUND, "Brand not found");
   }
 
-  return withDisplayImageUrl(brand);
+  return withDisplayImageUrl({
+    ...brand,
+    itemCount: brand._count?.products ?? 0,
+  });
 };
 
 const getBrandById = async (id: string) => {
