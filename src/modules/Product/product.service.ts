@@ -426,6 +426,10 @@ const createProduct = async (
     });
 
     return product;
+  },
+  {
+    maxWait: 10000,
+    timeout: 30000,
   });
 
   const result = await withDisplayImageUrl(created);
@@ -931,6 +935,10 @@ const updateProduct = async (
     });
 
     return product;
+  },
+  {
+    maxWait: 10000,
+    timeout: 30000,
   });
 
   const result = await withDisplayImageUrl(updated);

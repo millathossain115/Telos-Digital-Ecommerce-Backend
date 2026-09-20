@@ -125,6 +125,10 @@ const adjustStock = async (
       product: updatedProduct,
       auditLog,
     };
+  },
+  {
+    maxWait: 10000,
+    timeout: 30000,
   });
 };
 

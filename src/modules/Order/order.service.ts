@@ -113,25 +113,24 @@ const createOrder = async (
       },
     });
 
-    // 2. Create OrderItem snapshots (Frozen in time)
-    for (const item of items) {
-      const itemSubtotal = item.unitPrice * item.quantity;
-      await tx.orderItem.create({
-        data: {
-          orderId: order.id,
-          productId: item.productId || null,
-          variantId: item.variantId || null,
-          productName: item.productName,
-          productThumbnail: item.productThumbnail || null,
-          productSku: item.productSku || null,
-          variantName: item.variantName || null,
-          unitPrice: item.unitPrice,
-          quantity: item.quantity,
-          subtotal: itemSubtotal,
-        },
-      });
+    // 2. Batch Create OrderItem snapshots in 1 single query
+    await tx.orderItem.createMany({
+      data: items.map((item) => ({
+        orderId: order.id,
+        productId: item.productId || null,
+        variantId: item.variantId || null,
+        productName: item.productName,
+        productThumbnail: item.productThumbnail || null,
+        productSku: item.productSku || null,
+        variantName: item.variantName || null,
+        unitPrice: item.unitPrice,
+        quantity: item.quantity,
+        subtotal: item.unitPrice * item.quantity,
+      })),
+    });
 
-      // 3. Atomically decrement stock & create audit log if productId exists
+    // 3. Atomically decrement stock & create audit log if productId exists
+    for (const item of items) {
       if (item.productId) {
         const prod = await tx.product.findUnique({
           where: { id: item.productId },
@@ -214,6 +213,10 @@ const createOrder = async (
       where: { id: order.id },
       include: defaultOrderInclude,
     });
+  },
+  {
+    maxWait: 10000,
+    timeout: 30000,
   });
 
   ActivityLogService.logActivity({
@@ -355,6 +358,10 @@ const cancelMyOrder = async (
     }
 
     return updated;
+  },
+  {
+    maxWait: 10000,
+    timeout: 30000,
   });
 };
 
@@ -547,6 +554,10 @@ const updateOrderStatus = async (
     });
 
     return updatedOrder;
+  },
+  {
+    maxWait: 10000,
+    timeout: 30000,
   });
 };
 
@@ -635,6 +646,10 @@ const updateOrderPayment = async (
       where: { id: order.id },
       include: defaultOrderInclude,
     });
+  },
+  {
+    maxWait: 10000,
+    timeout: 30000,
   });
 
   ActivityLogService.logActivity({

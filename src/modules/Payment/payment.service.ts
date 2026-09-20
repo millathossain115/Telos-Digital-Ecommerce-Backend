@@ -214,6 +214,10 @@ const verifyTransaction = async (
     });
 
     return updatedTxn;
+  },
+  {
+    maxWait: 10000,
+    timeout: 30000,
   });
 
   const result = {
