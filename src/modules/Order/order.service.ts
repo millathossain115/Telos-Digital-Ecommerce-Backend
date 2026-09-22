@@ -493,7 +493,10 @@ const getAllOrders = async (
 
   return {
     meta: buildPaginationMeta(page, limit, total),
-    data: orders,
+    data: orders.map(({ _count, ...order }) => ({
+      ...order,
+      itemCount: _count.items,
+    })),
   };
 };
 
