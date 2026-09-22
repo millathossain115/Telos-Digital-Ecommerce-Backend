@@ -368,7 +368,11 @@ const getAllCategories = async (
 
   return {
     meta: buildPaginationMeta(page, limit, total),
-    data: await withDisplayImageUrls(categories),
+    data: (await withDisplayImageUrls(categories)).map(({ _count, ...category }) => ({
+      ...category,
+      itemCount: _count.products,
+      subCategoryCount: _count.subCategories,
+    })),
   };
 };
 

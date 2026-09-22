@@ -84,6 +84,7 @@ const adminProductListSelect = {
   sku: true,
   price: true,
   originalPrice: true,
+  costPrice: true,
   stock: true,
   lowStockThreshold: true,
   stockStatus: true,
