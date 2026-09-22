@@ -5,6 +5,8 @@ import { ProductController } from "./product.controller";
 import { productFilesUpload } from "./product.middleware";
 import { ProductValidation } from "./product.validation";
 
+
+
 const router = Router();
 
 // Public catalog routes
@@ -12,7 +14,11 @@ router.get("/", ProductController.getAllProducts);
 router.get("/slug/:slug", ProductController.getProductBySlug);
 
 // Super Admin catalog listing (includes drafts and inactive items)
-router.get("/admin", auth("SUPER_ADMIN"), ProductController.getAllProductsAdmin);
+router.get(
+  "/admin",
+  auth("SUPER_ADMIN"),
+  ProductController.getAllProductsAdmin,
+);
 router.get(
   "/admin/inventory-summary",
   auth("SUPER_ADMIN"),
