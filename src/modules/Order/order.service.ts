@@ -51,6 +51,38 @@ const defaultOrderInclude = {
   },
 };
 
+const adminOrderListSelect = {
+  id: true,
+  orderNumber: true,
+  createdAt: true,
+  total: true,
+  subtotal: true,
+  deliveryFee: true,
+  discount: true,
+  status: true,
+  paymentStatus: true,
+  trackingNumber: true,
+  courierName: true,
+  customerDetails: {
+    select: {
+      name: true,
+      phone: true,
+      city: true,
+      zone: true,
+    },
+  },
+  transactions: {
+    select: {
+      paymentMethod: true,
+    },
+    orderBy: { createdAt: "asc" as const },
+    take: 1,
+  },
+  _count: {
+    select: { items: true },
+  },
+};
+
 // ==================== CREATE ORDER (CHECKOUT) ====================
 const createOrder = async (
   payload: TCreateOrderPayload,
@@ -454,7 +486,7 @@ const getAllOrders = async (
       skip,
       take: limit,
       orderBy,
-      include: defaultOrderInclude,
+      select: adminOrderListSelect,
     }),
     prisma.order.count({ where: whereConditions }),
   ]);

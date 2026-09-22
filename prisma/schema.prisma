@@ -190,6 +190,8 @@ model Category {
   updatedAt          DateTime   @updatedAt
 
   @@index([isActive, isDeleted])
+  @@index([isDeleted, createdAt])
+  @@index([isDeleted, isActive, createdAt])
   @@index([isFeaturedHomepage])
   @@map("categories")
 }
@@ -216,6 +218,8 @@ model Brand {
   updatedAt         DateTime @updatedAt
 
   @@index([isActive, isDeleted])
+  @@index([isDeleted, createdAt])
+  @@index([isDeleted, isActive, createdAt])
   @@index([isFeaturedMarquee])
   @@map("brands")
 }
@@ -325,6 +329,11 @@ model Product {
   @@index([subCategoryId])
   @@index([brandId])
   @@index([isActive, isDeleted])
+  @@index([isDeleted, createdAt])
+  @@index([isDeleted, isActive, createdAt])
+  @@index([categoryId, isDeleted, createdAt])
+  @@index([subCategoryId, isDeleted, createdAt])
+  @@index([brandId, isDeleted, createdAt])
   @@index([isFeatured])
   @@index([isFlashDeal])
   @@index([price])
@@ -500,6 +509,9 @@ model Order {
   @@index([status])
   @@index([paymentStatus])
   @@index([createdAt])
+  @@index([status, createdAt])
+  @@index([paymentStatus, createdAt])
+  @@index([status, paymentStatus, createdAt])
   @@map("orders")
 }
 

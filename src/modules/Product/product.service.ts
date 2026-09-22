@@ -77,6 +77,29 @@ const productInclude = {
   },
 };
 
+const adminProductListSelect = {
+  id: true,
+  name: true,
+  slug: true,
+  sku: true,
+  price: true,
+  originalPrice: true,
+  stock: true,
+  lowStockThreshold: true,
+  stockStatus: true,
+  thumbnail: true,
+  isActive: true,
+  isFeatured: true,
+  isFlashDeal: true,
+  hasVoucher: true,
+  createdAt: true,
+  updatedAt: true,
+  category: { select: { id: true, name: true, slug: true } },
+  subCategory: { select: { id: true, name: true, slug: true } },
+  brand: { select: { id: true, name: true, slug: true, image: true } },
+  _count: { select: { reviews: true, variants: true } },
+};
+
 const slugify = (value: string) =>
   value
     .trim()
@@ -603,7 +626,7 @@ const getAllProductsAdmin = async (
       skip,
       take: limit,
       orderBy,
-      include: productInclude,
+      select: adminProductListSelect,
     }),
     prisma.product.count({ where: whereConditions }),
   ]);

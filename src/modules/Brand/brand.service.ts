@@ -31,6 +31,25 @@ import {
 } from "./brand.interface";
 import { ActivityLogService } from "../ActivityLog/activityLog.service";
 
+const brandListSelect = {
+  id: true,
+  name: true,
+  slug: true,
+  tagline: true,
+  description: true,
+  image: true,
+  imageKey: true,
+  isActive: true,
+  isFeaturedMarquee: true,
+  createdAt: true,
+  updatedAt: true,
+  _count: {
+    select: {
+      products: { where: { isDeleted: false } },
+    },
+  },
+};
+
 const slugify = (value: string) =>
   value
     .trim()
@@ -252,15 +271,7 @@ const getAllBrands = async (
       skip,
       take: limit,
       orderBy,
-      include: {
-        _count: {
-          select: {
-            products: {
-              where: { isDeleted: false },
-            },
-          },
-        },
-      },
+      select: brandListSelect,
     }),
     prisma.brand.count({ where: whereConditions }),
   ]);

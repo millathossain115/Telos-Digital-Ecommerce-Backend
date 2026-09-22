@@ -41,6 +41,26 @@ const categoryInclude = {
   },
 };
 
+const categoryListSelect = {
+  id: true,
+  name: true,
+  slug: true,
+  description: true,
+  icon: true,
+  image: true,
+  imageKey: true,
+  isActive: true,
+  isFeaturedHomepage: true,
+  createdAt: true,
+  updatedAt: true,
+  _count: {
+    select: {
+      products: { where: { isDeleted: false } },
+      subCategories: { where: { isDeleted: false } },
+    },
+  },
+};
+
 const slugify = (value: string) =>
   value
     .trim()
@@ -341,7 +361,7 @@ const getAllCategories = async (
       skip,
       take: limit,
       orderBy,
-      include: categoryInclude,
+      select: categoryListSelect,
     }),
     prisma.category.count({ where: whereConditions }),
   ]);

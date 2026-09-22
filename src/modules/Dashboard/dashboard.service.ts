@@ -15,36 +15,40 @@ import {
 
 // ==================== 1. KPI METRICS ====================
 const getDashboardKpis = async (): Promise<TDashboardKpis> => {
-  const [
-    allOrders,
-    pendingOrdersCount,
-    processingOrdersCount,
-  ] = await Promise.all([
-    prisma.order.findMany({
-      where: { status: { not: OrderStatus.CANCELLED } },
-      select: { total: true, status: true, createdAt: true },
-    }),
-    prisma.order.count({ where: { status: OrderStatus.PENDING } }),
-    prisma.order.count({ where: { status: OrderStatus.PROCESSING } }),
-  ]);
-
-  const grossRevenue = allOrders.reduce((sum, o) => sum + Number(o.total), 0);
-  const totalOrders = allOrders.length;
-  const avgOrderValue = totalOrders > 0 ? Math.round(grossRevenue / totalOrders) : 0;
-  const pendingOrders = pendingOrdersCount + processingOrdersCount;
-
-  // Period comparison (Last 7 days vs Prior 7 days)
   const now = new Date();
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
   const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+  const activeOrderWhere: Prisma.OrderWhereInput = { status: { not: OrderStatus.CANCELLED } };
 
-  const currentWindowOrders = allOrders.filter((o) => new Date(o.createdAt) >= sevenDaysAgo);
-  const priorWindowOrders = allOrders.filter(
-    (o) => new Date(o.createdAt) >= fourteenDaysAgo && new Date(o.createdAt) < sevenDaysAgo,
-  );
+  const [allOrders, pendingOrdersCount, processingOrdersCount, currentWindow, priorWindow] =
+    await Promise.all([
+      prisma.order.aggregate({
+        where: activeOrderWhere,
+        _sum: { total: true },
+        _count: { _all: true },
+      }),
+      prisma.order.count({ where: { status: OrderStatus.PENDING } }),
+      prisma.order.count({ where: { status: OrderStatus.PROCESSING } }),
+      prisma.order.aggregate({
+        where: { ...activeOrderWhere, createdAt: { gte: sevenDaysAgo, lte: now } },
+        _sum: { total: true },
+        _count: { _all: true },
+      }),
+      prisma.order.aggregate({
+        where: { ...activeOrderWhere, createdAt: { gte: fourteenDaysAgo, lt: sevenDaysAgo } },
+        _sum: { total: true },
+        _count: { _all: true },
+      }),
+    ]);
 
-  const currentRev = currentWindowOrders.reduce((sum, o) => sum + Number(o.total), 0);
-  const priorRev = priorWindowOrders.reduce((sum, o) => sum + Number(o.total), 0);
+  const grossRevenue = Number(allOrders._sum.total || 0);
+  const totalOrders = allOrders._count._all;
+  const avgOrderValue = totalOrders > 0 ? Math.round(grossRevenue / totalOrders) : 0;
+  const pendingOrders = pendingOrdersCount + processingOrdersCount;
+  const currentRev = Number(currentWindow._sum.total || 0);
+  const priorRev = Number(priorWindow._sum.total || 0);
+  const currentCount = currentWindow._count._all;
+  const priorCount = priorWindow._count._all;
 
   let revPct = 18.4;
   let revPos = true;
@@ -56,16 +60,16 @@ const getDashboardKpis = async (): Promise<TDashboardKpis> => {
 
   let orderPct = 12.2;
   let orderPos = true;
-  if (priorWindowOrders.length > 0) {
-    const diff = ((currentWindowOrders.length - priorWindowOrders.length) / priorWindowOrders.length) * 100;
+  if (priorCount > 0) {
+    const diff = ((currentCount - priorCount) / priorCount) * 100;
     orderPct = Math.round(Math.abs(diff) * 10) / 10;
     orderPos = diff >= 0;
   }
 
   let aovPct = 6.8;
   let aovPos = true;
-  const currentAov = currentWindowOrders.length > 0 ? currentRev / currentWindowOrders.length : 0;
-  const priorAov = priorWindowOrders.length > 0 ? priorRev / priorWindowOrders.length : 0;
+  const currentAov = currentCount > 0 ? currentRev / currentCount : 0;
+  const priorAov = priorCount > 0 ? priorRev / priorCount : 0;
   if (priorAov > 0) {
     const diff = ((currentAov - priorAov) / priorAov) * 100;
     aovPct = Math.round(Math.abs(diff) * 10) / 10;
@@ -76,15 +80,12 @@ const getDashboardKpis = async (): Promise<TDashboardKpis> => {
     grossRevenue,
     grossRevenueChange: `${revPos ? "+" : "-"}${revPct}%`,
     grossRevenuePositive: revPos,
-
     completedOrders: totalOrders,
     completedOrdersChange: `${orderPos ? "+" : "-"}${orderPct}%`,
     completedOrdersPositive: orderPos,
-
     avgOrderValue,
     avgOrderValueChange: `${aovPos ? "+" : "-"}${aovPct}%`,
     avgOrderValuePositive: aovPos,
-
     pendingOrders,
     pendingOrdersChange: pendingOrders > 0 ? `+${pendingOrders} Queue` : "All Clear",
     pendingOrdersPositive: pendingOrders === 0,
@@ -98,8 +99,16 @@ const getRevenueAnalytics = async (
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
+  const now = new Date();
+  const analyticsStart =
+    viewMode === "monthly"
+      ? new Date(now.getFullYear(), 0, 1)
+      : new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
   const orders = await prisma.order.findMany({
-    where: { status: { not: OrderStatus.CANCELLED } },
+    where: {
+      status: { not: OrderStatus.CANCELLED },
+      createdAt: { gte: analyticsStart, lte: now },
+    },
     select: { total: true, createdAt: true },
   });
 
