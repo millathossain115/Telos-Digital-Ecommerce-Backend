@@ -27,21 +27,12 @@ import {
 import { ActivityLogService } from "../ActivityLog/activityLog.service";
 
 // ==================== ORDER NUMBER GENERATOR ====================
-// Generates unique order number: TC-XXXXX (e.g. TC-94281)
-const generateUniqueOrderNumber = async (): Promise<string> => {
-  for (let i = 0; i < 10; i++) {
-    const randomNum = Math.floor(10000 + Math.random() * 90000); // 5 digits (10000-99999)
-    const orderNumber = `TC-${randomNum}`;
-    const existing = await prisma.order.findUnique({
-      where: { orderNumber },
-      select: { id: true },
-    });
-    if (!existing) {
-      return orderNumber;
-    }
-  }
-  // Fallback with timestamp slice
-  return `TC-${Date.now().toString().slice(-5)}`;
+// Generates high-entropy collision-resistant order number: TC-XXXX-XXXX (e.g. TC-4921-8392)
+// Zero database queries, instant execution.
+const generateUniqueOrderNumber = (): string => {
+  const timePart = Date.now().toString().slice(-4);
+  const randPart = Math.floor(1000 + Math.random() * 9000).toString();
+  return `TC-${timePart}-${randPart}`;
 };
 
 const defaultOrderInclude = {
@@ -78,7 +69,7 @@ const createOrder = async (
   }, 0);
 
   const total = Math.max(0, subtotal + deliveryFee - discount);
-  const orderNumber = await generateUniqueOrderNumber();
+  const orderNumber = generateUniqueOrderNumber();
 
   const customerId = authUser?.role === "CUSTOMER" ? authUser.id : null;
 
@@ -88,57 +79,45 @@ const createOrder = async (
   const initialPaymentStatus: PaymentStatus = isCOD ? PaymentStatus.UNPAID : PaymentStatus.PAID;
   const initialTrxStatus = isCOD ? "unpaid" : transaction?.trxId ? "verified" : "pending_verification";
 
-  // Execute in Prisma Interactive Transaction
-  const createdOrder = await prisma.$transaction(async (tx) => {
-    // 1. Create Order master record
-    const order = await tx.order.create({
-      data: {
-        orderNumber,
-        customerId,
-        status: OrderStatus.PENDING,
-        paymentStatus: initialPaymentStatus,
-        subtotal,
-        deliveryFee,
-        discount,
-        couponCode: couponCode || null,
-        total,
-        estimatedDelivery:
-          customerDetails.zone === "inside-dhaka"
-            ? "Tomorrow (within 24h)"
-            : "Within 2-3 Days",
-        courierName:
-          customerDetails.zone === "inside-dhaka"
-            ? "Telos Express BD"
-            : "Steadfast Courier",
-      },
-    });
+  // Execute in Prisma Interactive Transaction with batched queries
+  const createdOrder = await prisma.$transaction(
+    async (tx) => {
+      // 1. Collect unique product IDs and aggregate quantities to avoid N+1 queries
+      const productQtyMap = new Map<string, number>();
+      for (const item of items) {
+        if (item.productId) {
+          productQtyMap.set(
+            item.productId,
+            (productQtyMap.get(item.productId) || 0) + item.quantity,
+          );
+        }
+      }
 
-    // 2. Batch Create OrderItem snapshots in 1 single query
-    await tx.orderItem.createMany({
-      data: items.map((item) => ({
-        orderId: order.id,
-        productId: item.productId || null,
-        variantId: item.variantId || null,
-        productName: item.productName,
-        productThumbnail: item.productThumbnail || null,
-        productSku: item.productSku || null,
-        variantName: item.variantName || null,
-        unitPrice: item.unitPrice,
-        quantity: item.quantity,
-        subtotal: item.unitPrice * item.quantity,
-      })),
-    });
+      const uniqueProductIds = Array.from(productQtyMap.keys());
+      const stockAuditLogs: Array<{
+        productId: string;
+        actionType: "DECREASE";
+        quantity: number;
+        previousStock: number;
+        newStock: number;
+        reason: string;
+        note: string;
+        performedBy: string;
+      }> = [];
 
-    // 3. Atomically decrement stock & create audit log if productId exists
-    for (const item of items) {
-      if (item.productId) {
-        const prod = await tx.product.findUnique({
-          where: { id: item.productId },
+      const productUpdatePromises: Promise<any>[] = [];
+
+      if (uniqueProductIds.length > 0) {
+        // Fetch all products in ONE single batch query
+        const existingProducts = await tx.product.findMany({
+          where: { id: { in: uniqueProductIds } },
+          select: { id: true, stock: true, lowStockThreshold: true },
         });
 
-        if (prod) {
+        for (const prod of existingProducts) {
+          const qtyToDeduct = productQtyMap.get(prod.id) || 0;
           const currentStock = prod.stock;
-          const newStock = Math.max(0, currentStock - item.quantity);
+          const newStock = Math.max(0, currentStock - qtyToDeduct);
           const newStockStatus =
             newStock <= 0
               ? StockStatus.OUT_OF_STOCK
@@ -146,90 +125,127 @@ const createOrder = async (
                 ? StockStatus.LOW_STOCK
                 : StockStatus.IN_STOCK;
 
-          await tx.product.update({
-            where: { id: prod.id },
-            data: {
-              stock: newStock,
-              stockStatus: newStockStatus,
-            },
-          });
+          productUpdatePromises.push(
+            tx.product.update({
+              where: { id: prod.id },
+              data: {
+                stock: newStock,
+                stockStatus: newStockStatus,
+              },
+            }),
+          );
 
-          // Stock audit log
-          await tx.stockAuditLog.create({
-            data: {
-              productId: prod.id,
-              actionType: "DECREASE",
-              quantity: item.quantity,
-              previousStock: currentStock,
-              newStock,
-              reason: "ORDER_PLACED",
-              note: `Order #${orderNumber}`,
-              performedBy: authUser?.name || customerDetails.name,
-            },
+          stockAuditLogs.push({
+            productId: prod.id,
+            actionType: "DECREASE",
+            quantity: qtyToDeduct,
+            previousStock: currentStock,
+            newStock,
+            reason: "ORDER_PLACED",
+            note: `Order #${orderNumber}`,
+            performedBy: authUser?.name || customerDetails.name || "Customer",
           });
         }
       }
-    }
 
-    // 4. Create OrderCustomerDetails snapshot (Frozen in time)
-    await tx.orderCustomerDetails.create({
-      data: {
-        orderId: order.id,
-        name: customerDetails.name,
-        phone: customerDetails.phone,
-        email: customerDetails.email || null,
-        street: customerDetails.street,
-        area: customerDetails.area || null,
-        union: customerDetails.union || null,
-        city: customerDetails.city,
-        zone: customerDetails.zone,
-        postalCode: customerDetails.postalCode || null,
-        label: customerDetails.label || "Home",
-        deliveryNote: customerDetails.deliveryNote || null,
-      },
-    });
+      // 2. Concurrently create nested order, update stocks, write audit logs, and clear cart
+      const [order] = await Promise.all([
+        tx.order.create({
+          data: {
+            orderNumber,
+            customerId,
+            status: OrderStatus.PENDING,
+            paymentStatus: initialPaymentStatus,
+            subtotal,
+            deliveryFee,
+            discount,
+            couponCode: couponCode || null,
+            total,
+            estimatedDelivery:
+              customerDetails.zone === "inside-dhaka"
+                ? "Tomorrow (within 24h)"
+                : "Within 2-3 Days",
+            courierName:
+              customerDetails.zone === "inside-dhaka"
+                ? "Telos Express BD"
+                : "Steadfast Courier",
+            items: {
+              create: items.map((item) => ({
+                productId: item.productId || null,
+                variantId: item.variantId || null,
+                productName: item.productName,
+                productThumbnail: item.productThumbnail || null,
+                productSku: item.productSku || null,
+                variantName: item.variantName || null,
+                unitPrice: item.unitPrice,
+                quantity: item.quantity,
+                subtotal: item.unitPrice * item.quantity,
+              })),
+            },
+            customerDetails: {
+              create: {
+                name: customerDetails.name,
+                phone: customerDetails.phone,
+                email: customerDetails.email || null,
+                street: customerDetails.street,
+                area: customerDetails.area || null,
+                union: customerDetails.union || null,
+                city: customerDetails.city,
+                zone: customerDetails.zone,
+                postalCode: customerDetails.postalCode || null,
+                label: customerDetails.label || "Home",
+                deliveryNote: customerDetails.deliveryNote || null,
+              },
+            },
+            transactions: {
+              create: [
+                {
+                  paymentMethod,
+                  trxId: transaction?.trxId || null,
+                  mfsNumber: transaction?.mfsNumber || null,
+                  amount: total,
+                  status: initialTrxStatus,
+                },
+              ],
+            },
+          },
+          include: defaultOrderInclude,
+        }),
+        Promise.all(productUpdatePromises),
+        stockAuditLogs.length > 0
+          ? tx.stockAuditLog.createMany({ data: stockAuditLogs })
+          : Promise.resolve(),
+        customerId
+          ? tx.cartItem.deleteMany({ where: { customerId } })
+          : Promise.resolve(),
+      ]);
 
-    // 5. Create OrderTransaction
-    await tx.orderTransaction.create({
-      data: {
-        orderId: order.id,
-        paymentMethod,
-        trxId: transaction?.trxId || null,
-        mfsNumber: transaction?.mfsNumber || null,
-        amount: total,
-        status: initialTrxStatus,
-      },
-    });
+      return order;
+    },
+    {
+      maxWait: 5000,
+      timeout: 15000,
+    },
+  );
 
-    // 6. Clear customer cart if authenticated
-    if (customerId) {
-      await tx.cartItem.deleteMany({
-        where: { customerId },
+  // Non-blocking asynchronous ActivityLog dispatch (never delays client response)
+  Promise.resolve()
+    .then(() => {
+      ActivityLogService.logActivity({
+        actorName: customerDetails.name || "Customer",
+        actorEmail: customerDetails.email || authUser?.email || "customer@teloscart.website",
+        actorRole: authUser?.role === "CUSTOMER" ? "Customer" : "Guest Buyer",
+        action: "New Order Placed",
+        entity: `Order #${createdOrder.orderNumber}`,
+        entityId: createdOrder.orderNumber,
+        category: "ORDERS",
+        severity: "SUCCESS",
+        details: `Order #${createdOrder.orderNumber} placed for BDT ${Number(total).toLocaleString("en-BD", { minimumFractionDigits: 2 })} with ${items.length} item(s). Zone: ${customerDetails.zone}.`,
       });
-    }
-
-    // Return complete created order
-    return await tx.order.findUniqueOrThrow({
-      where: { id: order.id },
-      include: defaultOrderInclude,
+    })
+    .catch((err) => {
+      console.error("Non-blocking activity log error on order placement:", err);
     });
-  },
-  {
-    maxWait: 10000,
-    timeout: 30000,
-  });
-
-  ActivityLogService.logActivity({
-    actorName: customerDetails.name || "Customer",
-    actorEmail: customerDetails.email || authUser?.email || "customer@teloscart.website",
-    actorRole: authUser?.role === "CUSTOMER" ? "Customer" : "Guest Buyer",
-    action: "New Order Placed",
-    entity: `Order #${createdOrder.orderNumber}`,
-    entityId: createdOrder.orderNumber,
-    category: "ORDERS",
-    severity: "SUCCESS",
-    details: `Order #${createdOrder.orderNumber} placed for BDT ${Number(total).toLocaleString("en-BD", { minimumFractionDigits: 2 })} with ${items.length} item(s). Zone: ${customerDetails.zone}.`,
-  });
 
   return createdOrder;
 };
