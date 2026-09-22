@@ -16,6 +16,10 @@ export type TLoginPayload = {
   password: string;
 };
 
+export type TGoogleLoginPayload = {
+  idToken: string;
+};
+
 export type TChangePasswordPayload = {
   oldPassword: string;
   newPassword: string;
@@ -30,6 +34,7 @@ export type TAuthProfileResponse = {
   avatar?: string | null;
   role: TRole;
   status: string;
+  provider?: string;
   addresses?: Array<{
     id: string;
     title: string | null;

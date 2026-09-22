@@ -81,9 +81,20 @@ const updateProfileValidationSchema = z.object({
   }),
 });
 
+const googleLoginValidationSchema = z.object({
+  body: z.object({
+    idToken: z
+      .string({
+        required_error: "Google ID token is required",
+      })
+      .min(1, "Google ID token cannot be empty"),
+  }),
+});
+
 export const AuthValidation = {
   customerRegisterValidationSchema,
   loginValidationSchema,
+  googleLoginValidationSchema,
   refreshTokenValidationSchema,
   changePasswordValidationSchema,
   updateProfileValidationSchema,

@@ -112,9 +112,11 @@ model Customer {
   customerId String?           @unique // Unique business identifier e.g. TC-2026-1001
   name       String
   email      String            @unique
-  password   String
-  phone      String            @unique
+  password   String?
+  phone      String?           @unique
   avatar     String?
+  googleId   String?           @unique
+  provider   String            @default("credentials")
   status     UserStatus        @default(ACTIVE)
 
   // E-commerce address relations

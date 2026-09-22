@@ -24,4 +24,7 @@ export default {
     signed_url_expires_in: Number(process.env.R2_SIGNED_URL_EXPIRES_IN) || 300,
     max_file_size_mb: Number(process.env.R2_MAX_FILE_SIZE_MB) || 10,
   },
+  google: {
+    clientId: process.env.GOOGLE_CLIENT_ID,
+  },
 };

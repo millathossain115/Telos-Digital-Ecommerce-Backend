@@ -40,6 +40,12 @@ router.post(
   AuthController.loginAdmin,
 );
 
+router.post(
+  "/google",
+  validateRequest(AuthValidation.googleLoginValidationSchema),
+  AuthController.googleLogin,
+);
+
 const moduleRoutes = [
   {
     path: "/health",

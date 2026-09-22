@@ -1,4 +1,5 @@
 import bcryptjs from "bcryptjs";
+import { OAuth2Client } from "google-auth-library";
 import httpStatus from "http-status";
 import jwt, { JwtPayload, SignOptions } from "jsonwebtoken";
 import config from "../../config";
@@ -15,6 +16,8 @@ import {
   TUpdateProfilePayload,
 } from "./auth.interface";
 import { ActivityLogService } from "../ActivityLog/activityLog.service";
+
+const googleClient = new OAuth2Client();
 
 // Helper to generate unique Customer ID (e.g. TC-2026-1042)
 const generateCustomerId = async (): Promise<string> => {
@@ -192,6 +195,13 @@ const loginCustomer = async (
     throw new AppError(
       httpStatus.FORBIDDEN,
       `Your account is ${customer.status.toLowerCase()}. Please contact TelosCart support.`,
+    );
+  }
+
+  if (!customer.password) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "This account was created using Google Sign-In. Please sign in with Google.",
     );
   }
 
@@ -515,6 +525,13 @@ const changePassword = async (
     throw new AppError(httpStatus.NOT_FOUND, "Customer not found");
   }
 
+  if (!customer.password) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "This account was registered via Google OAuth and has no password set.",
+    );
+  }
+
   const isMatch = await bcryptjs.compare(
     payload.oldPassword,
     customer.password,
@@ -638,11 +655,175 @@ const updateMe = async (
   };
 };
 
+const googleLogin = async (idToken: string): Promise<TAuthResponse> => {
+  const clientId = config.google.clientId;
+  if (!clientId) {
+    throw new AppError(
+      httpStatus.INTERNAL_SERVER_ERROR,
+      "Google Client ID is not configured on the server",
+    );
+  }
+
+  let payload;
+  try {
+    const ticket = await googleClient.verifyIdToken({
+      idToken,
+      audience: clientId,
+    });
+    payload = ticket.getPayload();
+  } catch (error) {
+    throw new AppError(
+      httpStatus.UNAUTHORIZED,
+      "Invalid or expired Google ID token",
+    );
+  }
+
+  if (!payload || !payload.email) {
+    throw new AppError(
+      httpStatus.UNAUTHORIZED,
+      "Google token did not provide a valid email address",
+    );
+  }
+
+  if (!payload.email_verified) {
+    throw new AppError(
+      httpStatus.UNAUTHORIZED,
+      "Google account email is not verified",
+    );
+  }
+
+  const normalizedEmail = payload.email.toLowerCase().trim();
+  const googleId = payload.sub;
+  const name = (payload.name || payload.given_name || "Customer").trim();
+  const avatar = payload.picture || null;
+
+  // Verify that an admin account does not exist with this email
+  const existingAdmin = await prisma.admin.findUnique({
+    where: { email: normalizedEmail },
+    select: { id: true, isDeleted: true },
+  });
+
+  if (existingAdmin && !existingAdmin.isDeleted) {
+    throw new AppError(
+      httpStatus.CONFLICT,
+      "This email is registered as an administrator account. Please use Admin Login.",
+    );
+  }
+
+  let customer = await prisma.customer.findFirst({
+    where: {
+      OR: [{ googleId }, { email: normalizedEmail }],
+    },
+    include: {
+      addresses: true,
+    },
+  });
+
+  if (customer) {
+    if (customer.isDeleted) {
+      throw new AppError(
+        httpStatus.UNAUTHORIZED,
+        "Customer account has been deactivated. Please contact support.",
+      );
+    }
+
+    if (customer.status !== "ACTIVE") {
+      throw new AppError(
+        httpStatus.FORBIDDEN,
+        `Your account is ${customer.status.toLowerCase()}. Please contact TelosCart support.`,
+      );
+    }
+
+    // Link googleId or update avatar/provider if not set
+    if (!customer.googleId || !customer.avatar || customer.provider !== "google") {
+      customer = await prisma.customer.update({
+        where: { id: customer.id },
+        data: {
+          googleId: customer.googleId || googleId,
+          avatar: customer.avatar || avatar,
+          provider: customer.provider || "google",
+        },
+        include: {
+          addresses: true,
+        },
+      });
+    }
+
+    ActivityLogService.logActivity({
+      actorName: customer.name,
+      actorEmail: customer.email,
+      actorRole: "CUSTOMER",
+      action: "Customer Google Login",
+      entity: "Customer Account",
+      entityId: customer.id,
+      category: "AUTH",
+      severity: "SUCCESS",
+      details: `Customer ${customer.name} (${customer.email}) logged in with Google OAuth.`,
+    });
+  } else {
+    // Register new customer via Google OAuth
+    const customerId = await generateCustomerId();
+
+    customer = await prisma.customer.create({
+      data: {
+        customerId,
+        name,
+        email: normalizedEmail,
+        avatar,
+        googleId,
+        provider: "google",
+        status: "ACTIVE",
+      },
+      include: {
+        addresses: true,
+      },
+    });
+
+    ActivityLogService.logActivity({
+      actorName: name,
+      actorEmail: normalizedEmail,
+      actorRole: "CUSTOMER",
+      action: "Customer Google Registration",
+      entity: "Customer Account",
+      entityId: customer.id,
+      category: "AUTH",
+      severity: "SUCCESS",
+      details: `New customer ${name} registered via Google OAuth (${customerId}).`,
+    });
+  }
+
+  const { accessToken, refreshToken } = generateTokens({
+    id: customer.id,
+    email: customer.email,
+    role: "CUSTOMER",
+  });
+
+  return {
+    accessToken,
+    refreshToken,
+    user: {
+      id: customer.id,
+      customerId: customer.customerId,
+      name: customer.name,
+      email: customer.email,
+      phone: customer.phone,
+      avatar: customer.avatar,
+      role: "CUSTOMER",
+      status: customer.status,
+      provider: customer.provider,
+      addresses: customer.addresses,
+      createdAt: customer.createdAt,
+      updatedAt: customer.updatedAt,
+    },
+  };
+};
+
 export const AuthService = {
   registerCustomer,
   loginCustomer,
   loginAdmin,
   login,
+  googleLogin,
   refreshToken,
   getMe,
   changePassword,

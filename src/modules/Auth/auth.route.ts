@@ -41,6 +41,19 @@ router.post(
   AuthController.login,
 );
 
+// Google OAuth Login / Registration
+router.post(
+  "/google",
+  validateRequest(AuthValidation.googleLoginValidationSchema),
+  AuthController.googleLogin,
+);
+
+router.post(
+  "/customer/google",
+  validateRequest(AuthValidation.googleLoginValidationSchema),
+  AuthController.googleLogin,
+);
+
 // Refresh Access Token
 router.post(
   "/refresh-token",
