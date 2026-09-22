@@ -56,4 +56,8 @@ process.on("SIGINT", () => {
   exitHandler();
 });
 
-bootstrap();
+export default app;
+
+if (require.main === module) {
+  bootstrap();
+}

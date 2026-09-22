@@ -11,17 +11,20 @@ import router from "./routes";
 const app: Application = express();
 
 // Middlewares & Security Parsers
-app.use(
-  cors({
-    origin: [
-      config.client_url,
-      "https://www.teloscart.website",
-      "http://localhost:5173",
-      "http://localhost:3000",
-    ],
-    credentials: true,
-  }),
-);
+const allowedOrigins = [
+  config.client_url,
+  "https://www.teloscart.website",
+  "http://localhost:5173",
+  "http://localhost:3000",
+].filter((origin): origin is string => Boolean(origin));
+
+const corsOptions = {
+  origin: allowedOrigins,
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

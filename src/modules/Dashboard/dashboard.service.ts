@@ -157,7 +157,6 @@ const getRevenueAnalytics = async (
   }
 
   // Daily Mode: 7 Days
-  const now = new Date();
   const dayIndex = now.getDay(); // 0 is Sun, 1 is Mon...
   // Align to Mon..Sun
   const dailyMap: Record<string, { revenue: number; count: number }> = {};
