@@ -54,6 +54,30 @@ const customerAddressSelect = {
   country: true,
 };
 
+const searchCustomersForAdmin = async (searchTerm: string) => {
+  const term = searchTerm.trim();
+  if (!term) return [];
+
+  return prisma.customer.findMany({
+    where: {
+      isDeleted: false,
+      OR: [
+        { name: { contains: term, mode: "insensitive" } },
+        { email: { contains: term, mode: "insensitive" } },
+        { phone: { contains: term, mode: "insensitive" } },
+        { customerId: { contains: term, mode: "insensitive" } },
+      ],
+    },
+    select: {
+      ...safeCustomerSelect,
+      addresses: { select: customerAddressSelect, orderBy: { isDefault: "desc" }, take: 3 },
+      _count: { select: { orders: true } },
+    },
+    take: 10,
+    orderBy: { createdAt: "desc" },
+  });
+};
+
 const getAllCustomers = async (
   filters: TCustomerFilterRequest,
   paginationOptions?: IPaginationOptions,
@@ -378,6 +402,7 @@ const deleteAddress = async (customerId: string, addressId: string) => {
 };
 
 export const CustomerService = {
+  searchCustomersForAdmin,
   getAllCustomers,
   getCustomersSummaryAdmin,
   getCustomerById,

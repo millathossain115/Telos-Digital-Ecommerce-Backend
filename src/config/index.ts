@@ -9,6 +9,8 @@ export default {
   database_url: process.env.DATABASE_URL,
   client_url: process.env.CLIENT_URL || "https://www.teloscart.website",
   bcrypt_salt_rounds: Number(process.env.BCRYPT_SALT_ROUNDS) || 12,
+  manual_order_default_password:
+    process.env.MANUAL_ORDER_DEFAULT_PASSWORD || "ChangeMe123!",
   jwt: {
     access_secret: process.env.JWT_ACCESS_SECRET || "teloscart_dev_access_secret",
     access_expires_in: process.env.JWT_ACCESS_EXPIRES_IN || "1d",

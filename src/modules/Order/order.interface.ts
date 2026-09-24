@@ -1,4 +1,4 @@
-import { OrderStatus, PaymentStatus } from "@prisma/client";
+import { OrderSource, OrderStatus, PaymentStatus } from "@prisma/client";
 
 export interface TOrderItemPayload {
   productId?: string;
@@ -39,6 +39,12 @@ export interface TCreateOrderPayload {
   deliveryFee?: number;
   discount?: number;
   couponCode?: string;
+  source?: OrderSource;
+  customerId?: string;
+}
+
+export interface TCreateAdminOrderPayload extends TCreateOrderPayload {
+  source: Exclude<OrderSource, "WEBSITE">;
 }
 
 export interface TUpdateOrderStatusPayload {
@@ -64,6 +70,7 @@ export interface TOrderFilterRequest {
   status?: OrderStatus;
   paymentStatus?: PaymentStatus;
   customerId?: string;
+  source?: OrderSource;
   startDate?: string;
   endDate?: string;
 }

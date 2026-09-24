@@ -64,6 +64,13 @@ enum PaymentStatus {
   REFUNDED
 }
 
+enum OrderSource {
+  WEBSITE
+  FACEBOOK
+  PHONE
+  ADMIN
+}
+
 enum ActivitySeverity {
   INFO
   SUCCESS
@@ -95,6 +102,7 @@ model Admin {
 
   // Relations
   activityLogs ActivityLog[]
+  createdOrders Order[]
 
   // Soft Delete Policy
   isDeleted Boolean    @default(false)
@@ -480,6 +488,9 @@ model Order {
   orderNumber       String                 @unique // e.g. TC-94281 (auto-generated in backend)
   customerId        String?
   customer          Customer?              @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  source            OrderSource            @default(WEBSITE)
+  createdByAdminId  String?
+  createdByAdmin    Admin?                 @relation(fields: [createdByAdminId], references: [id], onDelete: SetNull)
 
   status            OrderStatus            @default(PENDING)
   paymentStatus     PaymentStatus          @default(UNPAID)
@@ -506,6 +517,8 @@ model Order {
   updatedAt         DateTime               @updatedAt
 
   @@index([customerId])
+  @@index([source])
+  @@index([createdByAdminId])
   @@index([status])
   @@index([paymentStatus])
   @@index([createdAt])

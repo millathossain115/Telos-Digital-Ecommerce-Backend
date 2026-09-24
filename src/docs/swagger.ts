@@ -94,6 +94,11 @@ export const swaggerDocument = {
         type: "string",
         enum: ["SHIPPING", "BILLING"],
       },
+      OrderSource: {
+        type: "string",
+        enum: ["WEBSITE", "FACEBOOK", "PHONE", "ADMIN"],
+        description: "Channel through which order was received",
+      },
       CustomerAddress: {
         type: "object",
         properties: {
@@ -402,6 +407,26 @@ export const swaggerDocument = {
         ],
         responses: {
           200: { description: "List of customers" },
+          403: { description: "Forbidden - Super Admin required" },
+        },
+      },
+    },
+    "/customers/admin/search": {
+      get: {
+        tags: ["Customers"],
+        summary: "Search customers for manual order creation (Super Admin only)",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "q",
+            in: "query",
+            required: true,
+            schema: { type: "string", minLength: 1 },
+            description: "Search by name, email, phone, or customer ID",
+          },
+        ],
+        responses: {
+          200: { description: "Matching customers retrieved without password data" },
           403: { description: "Forbidden - Super Admin required" },
         },
       },
@@ -1284,6 +1309,84 @@ export const swaggerDocument = {
         },
       },
     },
+    "/orders/admin": {
+      post: {
+        tags: ["Orders"],
+        summary: "Create manual order (Super Admin only)",
+        description:
+          "Creates a Facebook, phone, or direct-admin order. Existing customers are matched by customerId, email, or phone. Otherwise, a customer account is created using the configured default password.",
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["source", "items", "customerDetails"],
+                properties: {
+                  customerId: { type: "string", format: "uuid" },
+                  source: { $ref: "#/components/schemas/OrderSource" },
+                  items: {
+                    type: "array",
+                    minItems: 1,
+                    items: {
+                      type: "object",
+                      required: ["productName", "unitPrice", "quantity"],
+                      properties: {
+                        productId: { type: "string" },
+                        variantId: { type: "string" },
+                        productName: { type: "string", example: "Classic T-Shirt" },
+                        productThumbnail: { type: "string" },
+                        productSku: { type: "string" },
+                        variantName: { type: "string" },
+                        unitPrice: { type: "number", minimum: 0, example: 850 },
+                        quantity: { type: "integer", minimum: 1, example: 2 },
+                      },
+                    },
+                  },
+                  customerDetails: {
+                    type: "object",
+                    required: ["name", "phone", "street", "city", "zone"],
+                    properties: {
+                      name: { type: "string", example: "Rahim Ahmed" },
+                      phone: { type: "string", example: "+8801700000000" },
+                      email: { type: "string", format: "email" },
+                      street: { type: "string", example: "House 12, Road 4" },
+                      area: { type: "string", example: "Dhanmondi" },
+                      union: { type: "string" },
+                      city: { type: "string", example: "Dhaka" },
+                      zone: { type: "string", enum: ["inside-dhaka", "outside-dhaka"] },
+                      postalCode: { type: "string" },
+                      label: { type: "string", example: "Home" },
+                      deliveryNote: { type: "string" },
+                    },
+                  },
+                  transaction: {
+                    type: "object",
+                    required: ["paymentMethod"],
+                    properties: {
+                      paymentMethod: { type: "string", example: "cod" },
+                      trxId: { type: "string" },
+                      mfsNumber: { type: "string" },
+                      amount: { type: "number", minimum: 0 },
+                    },
+                  },
+                  deliveryFee: { type: "number", minimum: 0, default: 0 },
+                  discount: { type: "number", minimum: 0, default: 0 },
+                  couponCode: { type: "string", nullable: true },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          201: { description: "Manual order and customer account created successfully" },
+          400: { description: "Validation or stock error" },
+          403: { description: "Forbidden - Super Admin required" },
+          409: { description: "Customer email or phone conflict" },
+        },
+      },
+    },
     "/orders": {
       post: {
         tags: ["Orders"],
@@ -1295,10 +1398,21 @@ export const swaggerDocument = {
       },
       get: {
         tags: ["Orders"],
-        summary: "List all orders with filters (Super Admin only)",
         security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "searchTerm", in: "query", schema: { type: "string" } },
+          { name: "status", in: "query", schema: { type: "string" } },
+          { name: "paymentStatus", in: "query", schema: { type: "string" } },
+          { name: "customerId", in: "query", schema: { type: "string" } },
+          { name: "source", in: "query", schema: { $ref: "#/components/schemas/OrderSource" } },
+          { name: "startDate", in: "query", schema: { type: "string", format: "date" } },
+          { name: "endDate", in: "query", schema: { type: "string", format: "date" } },
+          { name: "page", in: "query", schema: { type: "integer", default: 1 } },
+          { name: "limit", in: "query", schema: { type: "integer", default: 20 } },
+          { name: "sortBy", in: "query", schema: { type: "string" } },
+          { name: "sortOrder", in: "query", schema: { type: "string", enum: ["asc", "desc"] } },
+        ],
         responses: {
-          200: { description: "Orders retrieved successfully" },
           401: { description: "Unauthorized" },
           403: { description: "Forbidden" },
         },

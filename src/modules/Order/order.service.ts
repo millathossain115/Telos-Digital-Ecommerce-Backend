@@ -1,7 +1,10 @@
-import { OrderStatus, PaymentStatus, Prisma, StockStatus } from "@prisma/client";
+import { OrderSource, OrderStatus, PaymentStatus, Prisma, StockStatus } from "@prisma/client";
+import bcryptjs from "bcryptjs";
+import config from "../../config";
 import httpStatus from "http-status";
 import AppError from "../../errors/AppError";
 import prisma from "../../lib/prisma";
+import { generateCustomerId } from "../Auth/auth.service";
 import {
   buildPaginationMeta,
   calculatePagination,
@@ -49,6 +52,13 @@ const defaultOrderInclude = {
       avatar: true,
     },
   },
+  createdByAdmin: {
+    select: {
+      id: true,
+      name: true,
+      email: true,
+    },
+  },
 };
 
 const adminOrderListSelect = {
@@ -61,6 +71,15 @@ const adminOrderListSelect = {
   discount: true,
   status: true,
   paymentStatus: true,
+  source: true,
+  createdByAdminId: true,
+  createdByAdmin: {
+    select: {
+      id: true,
+      name: true,
+      email: true,
+    },
+  },
   trackingNumber: true,
   courierName: true,
   customerDetails: {
@@ -68,7 +87,9 @@ const adminOrderListSelect = {
       name: true,
       phone: true,
       city: true,
+      street: true,
       zone: true,
+      deliveryNote: true,
     },
   },
   transactions: {
@@ -86,9 +107,24 @@ const adminOrderListSelect = {
 // ==================== CREATE ORDER (CHECKOUT) ====================
 const createOrder = async (
   payload: TCreateOrderPayload,
-  authUser?: { id: string; role: string; email?: string; name?: string },
+  authUser?: {
+    id: string;
+    role: string;
+    email?: string;
+    name?: string;
+    createdByAdminId?: string;
+  },
 ) => {
-  const { items, customerDetails, transaction, deliveryFee = 0, discount = 0, couponCode } = payload;
+  const {
+    items,
+    customerDetails,
+    transaction,
+    deliveryFee = 0,
+    discount = 0,
+    couponCode,
+    source = OrderSource.WEBSITE,
+    customerId: requestedCustomerId,
+  } = payload;
 
   if (!items || items.length === 0) {
     throw new AppError(httpStatus.BAD_REQUEST, "Cannot place an order with zero items");
@@ -103,7 +139,7 @@ const createOrder = async (
   const total = Math.max(0, subtotal + deliveryFee - discount);
   const orderNumber = generateUniqueOrderNumber();
 
-  const customerId = authUser?.role === "CUSTOMER" ? authUser.id : null;
+  const customerId = requestedCustomerId || (authUser?.role === "CUSTOMER" ? authUser.id : null);
 
   // Determine payment status
   const paymentMethod = transaction?.paymentMethod || "cod";
@@ -180,12 +216,45 @@ const createOrder = async (
         }
       }
 
+      // Group quantities per variantId to deduct from variant stock if applicable
+      const variantQtyMap = new Map<string, number>();
+      for (const item of items) {
+        if (item.variantId) {
+          variantQtyMap.set(
+            item.variantId,
+            (variantQtyMap.get(item.variantId) || 0) + item.quantity,
+          );
+        }
+      }
+
+      const uniqueVariantIds = Array.from(variantQtyMap.keys());
+      if (uniqueVariantIds.length > 0) {
+        const existingVariants = await tx.productVariant.findMany({
+          where: { id: { in: uniqueVariantIds } },
+          select: { id: true, stock: true },
+        });
+
+        for (const variant of existingVariants) {
+          const qty = variantQtyMap.get(variant.id) || 0;
+          productUpdatePromises.push(
+            tx.productVariant.update({
+              where: { id: variant.id },
+              data: {
+                stock: Math.max(0, variant.stock - qty),
+              },
+            }),
+          );
+        }
+      }
+
       // 2. Concurrently create nested order, update stocks, write audit logs, and clear cart
       const [order] = await Promise.all([
         tx.order.create({
           data: {
             orderNumber,
             customerId,
+            source,
+            createdByAdminId: authUser?.createdByAdminId || null,
             status: OrderStatus.PENDING,
             paymentStatus: initialPaymentStatus,
             subtotal,
@@ -263,16 +332,39 @@ const createOrder = async (
   // Non-blocking asynchronous ActivityLog dispatch (never delays client response)
   Promise.resolve()
     .then(() => {
+      const isAdminOrder = Boolean(
+        authUser?.createdByAdminId ||
+          authUser?.role === "ADMIN" ||
+          authUser?.role === "SUPER_ADMIN",
+      );
+      const actorName = isAdminOrder
+        ? authUser?.name || authUser?.email || "Admin"
+        : customerDetails.name || "Customer";
+      const actorEmail = isAdminOrder
+        ? authUser?.email || "admin@teloscart.website"
+        : customerDetails.email || authUser?.email || "customer@teloscart.website";
+      const actorRole = isAdminOrder
+        ? "Super Admin"
+        : authUser?.role === "CUSTOMER"
+          ? "Customer"
+          : "Guest Buyer";
+      const action = isAdminOrder
+        ? `Manual Order Placed (${source})`
+        : "New Order Placed";
+      const details = isAdminOrder
+        ? `Manual Order #${createdOrder.orderNumber} placed via ${source} by ${actorName} for customer "${customerDetails.name}" (${customerDetails.phone}). Total: BDT ${Number(total).toLocaleString("en-BD", { minimumFractionDigits: 2 })} with ${items.length} item(s). Zone: ${customerDetails.zone}.`
+        : `Order #${createdOrder.orderNumber} placed for BDT ${Number(total).toLocaleString("en-BD", { minimumFractionDigits: 2 })} with ${items.length} item(s). Zone: ${customerDetails.zone}.`;
+
       ActivityLogService.logActivity({
-        actorName: customerDetails.name || "Customer",
-        actorEmail: customerDetails.email || authUser?.email || "customer@teloscart.website",
-        actorRole: authUser?.role === "CUSTOMER" ? "Customer" : "Guest Buyer",
-        action: "New Order Placed",
+        actorName,
+        actorEmail,
+        actorRole,
+        action,
         entity: `Order #${createdOrder.orderNumber}`,
         entityId: createdOrder.orderNumber,
         category: "ORDERS",
         severity: "SUCCESS",
-        details: `Order #${createdOrder.orderNumber} placed for BDT ${Number(total).toLocaleString("en-BD", { minimumFractionDigits: 2 })} with ${items.length} item(s). Zone: ${customerDetails.zone}.`,
+        details,
       });
     })
     .catch((err) => {
@@ -280,6 +372,97 @@ const createOrder = async (
     });
 
   return createdOrder;
+};
+
+const createAdminOrder = async (
+  payload: import("./order.interface").TCreateAdminOrderPayload,
+  admin: { id: string; name?: string; email?: string },
+) => {
+  const normalizedEmail = payload.customerDetails.email?.trim().toLowerCase() || null;
+  const normalizedPhone = payload.customerDetails.phone.trim();
+  const accountEmail =
+    normalizedEmail || `${normalizedPhone.replace(/\D/g, "")}@manual.teloscart.local`;
+
+  let customerId = payload.customerId;
+  let isNewCustomer = false;
+  let existingCustomerRecord: any = null;
+
+  if (customerId) {
+    existingCustomerRecord = await prisma.customer.findFirst({
+      where: {
+        OR: [{ id: customerId }, { customerId }],
+        isDeleted: false,
+        status: "ACTIVE",
+      },
+      select: { id: true, addresses: { select: { id: true }, take: 1 } },
+    });
+    if (!existingCustomerRecord) {
+      throw new AppError(httpStatus.NOT_FOUND, "Customer not found or inactive");
+    }
+    customerId = existingCustomerRecord.id;
+  } else {
+    existingCustomerRecord = await prisma.customer.findFirst({
+      where: {
+        isDeleted: false,
+        OR: [
+          ...(normalizedEmail ? [{ email: normalizedEmail }] : []),
+          { phone: normalizedPhone },
+        ],
+      },
+      select: { id: true, email: true, phone: true, addresses: { select: { id: true }, take: 1 } },
+    });
+    if (existingCustomerRecord) {
+      customerId = existingCustomerRecord.id;
+    }
+  }
+
+  if (!customerId) {
+    isNewCustomer = true;
+    const businessCustomerId = await generateCustomerId();
+    const password = await bcryptjs.hash(
+      config.manual_order_default_password,
+      config.bcrypt_salt_rounds,
+    );
+    const newCustomer = await prisma.customer.create({
+      data: {
+        customerId: businessCustomerId,
+        name: payload.customerDetails.name,
+        email: accountEmail,
+        phone: normalizedPhone,
+        password,
+      },
+      select: { id: true },
+    });
+    customerId = newCustomer.id;
+  }
+
+  // Save shipping address into CustomerAddress book if customer is new or has no saved addresses
+  if (customerId && (isNewCustomer || !existingCustomerRecord?.addresses?.length)) {
+    try {
+      await prisma.customerAddress.create({
+        data: {
+          customerId,
+          name: payload.customerDetails.name,
+          phone: normalizedPhone,
+          street: payload.customerDetails.street,
+          city: payload.customerDetails.city,
+          area: payload.customerDetails.area || null,
+          union: payload.customerDetails.union || null,
+          zone: payload.customerDetails.zone,
+          postalCode: payload.customerDetails.postalCode || null,
+          type: (payload.customerDetails.label?.toUpperCase() as any) || "HOME",
+          isDefault: true,
+        },
+      });
+    } catch (addrErr) {
+      console.error("Non-blocking error saving customer address for manual order:", addrErr);
+    }
+  }
+
+  return createOrder(
+    { ...payload, customerId, source: payload.source },
+    { ...admin, role: "ADMIN", createdByAdminId: admin.id },
+  );
 };
 
 // ==================== GET MY ORDERS (CUSTOMER) ====================
@@ -466,6 +649,10 @@ const getAllOrders = async (
 
   if (filters.customerId) {
     andConditions.push({ customerId: filters.customerId });
+  }
+
+  if (filters.source) {
+    andConditions.push({ source: filters.source });
   }
 
   if (filters.startDate || filters.endDate) {
@@ -917,6 +1104,7 @@ const validateCheckoutStock = async (
 
 export const OrderService = {
   createOrder,
+  createAdminOrder,
   validateCheckoutStock,
   getMyOrders,
   getMyOrderById,

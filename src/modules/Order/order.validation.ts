@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { OrderStatus, PaymentStatus } from "@prisma/client";
+import { OrderSource, OrderStatus, PaymentStatus } from "@prisma/client";
 
 const createOrderItemSchema = z.object({
   productId: z.string().optional(),
@@ -36,6 +36,19 @@ const createOrderTransactionSchema = z.object({
 const createOrderValidationSchema = z.object({
   body: z.object({
     items: z.array(createOrderItemSchema).min(1, "At least one order item is required"),
+    customerDetails: createOrderCustomerDetailsSchema,
+    transaction: createOrderTransactionSchema.optional(),
+    deliveryFee: z.number().min(0).optional().default(0),
+    discount: z.number().min(0).optional().default(0),
+    couponCode: z.string().optional().nullable(),
+  }),
+});
+
+const createAdminOrderValidationSchema = z.object({
+  body: z.object({
+    customerId: z.string().optional(),
+    source: z.enum([OrderSource.FACEBOOK, OrderSource.PHONE, OrderSource.ADMIN]),
+    items: z.array(createOrderItemSchema).min(1),
     customerDetails: createOrderCustomerDetailsSchema,
     transaction: createOrderTransactionSchema.optional(),
     deliveryFee: z.number().min(0).optional().default(0),
@@ -90,6 +103,7 @@ const checkCheckoutStockValidationSchema = z.object({
 
 export const OrderValidation = {
   createOrderValidationSchema,
+  createAdminOrderValidationSchema,
   updateOrderStatusValidationSchema,
   assignCourierValidationSchema,
   updateOrderPaymentValidationSchema,

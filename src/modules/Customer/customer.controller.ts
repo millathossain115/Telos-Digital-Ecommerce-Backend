@@ -5,6 +5,16 @@ import catchAsync from "../../shared/catchAsync";
 import sendResponse from "../../shared/sendResponse";
 import { CustomerService } from "./customer.service";
 
+const searchCustomersForAdmin = catchAsync(async (req: Request, res: Response) => {
+  const result = await CustomerService.searchCustomersForAdmin(String(req.query.q || ""));
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Customers found successfully",
+    data: result,
+  });
+});
+
 const getAllCustomers = catchAsync(async (req: Request, res: Response) => {
   const { searchTerm, status, startDate, endDate, page, limit, sortBy, sortOrder } =
     req.query;
@@ -178,6 +188,7 @@ const deleteAddress = catchAsync(async (req: Request, res: Response) => {
 });
 
 export const CustomerController = {
+  searchCustomersForAdmin,
   getAllCustomers,
   getCustomersSummaryAdmin,
   getCustomerById,

@@ -20,7 +20,7 @@ import { ActivityLogService } from "../ActivityLog/activityLog.service";
 const googleClient = new OAuth2Client();
 
 // Helper to generate unique Customer ID (e.g. TC-2026-1042)
-const generateCustomerId = async (): Promise<string> => {
+export const generateCustomerId = async (): Promise<string> => {
   const currentYear = new Date().getFullYear();
   let isUnique = false;
   let customerId = "";

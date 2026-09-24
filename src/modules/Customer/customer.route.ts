@@ -39,6 +39,13 @@ router.delete(
   CustomerController.deleteAddress,
 );
 
+// Admin: Customer lookup for manual order creation
+router.get(
+  "/admin/search",
+  auth("SUPER_ADMIN"),
+  CustomerController.searchCustomersForAdmin,
+);
+
 // Admin: Customer KPI summary
 router.get(
   "/admin/summary",

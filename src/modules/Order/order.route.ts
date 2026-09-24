@@ -43,6 +43,13 @@ router.patch(
 );
 
 // ==================== ADMIN MANAGEMENT ROUTES ====================
+router.post(
+  "/admin",
+  auth("SUPER_ADMIN"),
+  validateRequest(OrderValidation.createAdminOrderValidationSchema),
+  OrderController.createAdminOrder,
+);
+
 // Order analytics KPIs
 router.get("/stats", auth("SUPER_ADMIN"), OrderController.getOrderStats);
 

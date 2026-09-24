@@ -63,12 +63,27 @@ const cancelMyOrder = catchAsync(async (req, res) => {
 });
 
 // ==================== ADMIN CONTROLLERS ====================
+const createAdminOrder = catchAsync(async (req, res) => {
+  const result = await OrderService.createAdminOrder(req.body, {
+    id: req.user!.id,
+    email: req.user!.email,
+  });
+
+  sendResponse(res, {
+    statusCode: httpStatus.CREATED,
+    success: true,
+    message: `Manual order #${result.orderNumber} created successfully`,
+    data: result,
+  });
+});
+
 const getAllOrders = catchAsync(async (req, res) => {
   const {
     searchTerm,
     status,
     paymentStatus,
     customerId,
+    source,
     startDate,
     endDate,
     page,
@@ -82,6 +97,7 @@ const getAllOrders = catchAsync(async (req, res) => {
     status: status as any,
     paymentStatus: paymentStatus as any,
     customerId: customerId as string,
+    source: source as any,
     startDate: startDate as string,
     endDate: endDate as string,
   };
@@ -189,6 +205,7 @@ const validateCheckoutStock = catchAsync(async (req, res) => {
 
 export const OrderController = {
   createOrder,
+  createAdminOrder,
   validateCheckoutStock,
   getMyOrders,
   getMyOrderById,
